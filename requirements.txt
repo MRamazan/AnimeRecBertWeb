@@ -1,6 +1,7 @@
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
 flask
 numpy==1.26.4
 tb-nightly==2.19.0a20241221
 tqdm==4.67.1
-
 
