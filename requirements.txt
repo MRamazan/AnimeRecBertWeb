@@ -2,4 +2,5 @@ flask
 numpy==1.26.4
 tb-nightly==2.19.0a20241221
 tqdm==4.67.1
-torch==2.0.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
