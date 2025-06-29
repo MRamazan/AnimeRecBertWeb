@@ -1,4 +1,4 @@
-flask==3.1.1
+Flask==3.1.1
 torch==2.6.0+cpu
 numpy==1.26.4
 tb-nightly==2.19.0a20241221
