@@ -59,7 +59,7 @@ class AnimeRecommendationSystem:
         animes.sort(key=lambda x: x[1])  # İsme göre sırala
         return animes
 
-    def get_recommendations(self, favorite_anime_ids, num_recommendations=40):
+    def get_recommendations(self, favorite_anime_ids, num_recommendations=50):
         """Favori anime ID'lerine göre öneri döndürür"""
         try:
             if not favorite_anime_ids:
