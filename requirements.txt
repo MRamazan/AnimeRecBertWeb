@@ -1,9 +1,6 @@
 flask
-torch
+torch==2.6.0
 numpy==1.26.4
-wget==3.2
 tb-nightly==2.19.0a20241221
-scipy==1.15.1
 tqdm==4.67.1
 future==1.0.0
-matplotlib==3.10.1
