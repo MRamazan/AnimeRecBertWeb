@@ -742,9 +742,8 @@
                     loadFavorites();
                     document.getElementById('animeSearch').value = '';
                     hideDropdown();
-                    showMessage(result.message, 'success');
                 } else {
-                    showMessage(result.message, 'error');
+                    showMessage("Error", 'error');
                 }
             } catch (error) {
                 console.error('Error adding favorite:', error);
@@ -770,9 +769,9 @@
 
                 if (result.success) {
                     loadFavorites();
-                    showMessage(result.message, 'success');
+            
                 } else {
-                    showMessage(result.message, 'error');
+                    showMessage("Error", 'error');
                 }
             } catch (error) {
                 console.error('Error removing favorite:', error);
@@ -817,7 +816,7 @@
 
                 if (result.success) {
                     loadFavorites();
-                    showMessage(result.message, 'success');
+                  
                 }
             } catch (error) {
                 console.error('Error clearing favorites:', error);
@@ -946,7 +945,8 @@
 
         // Show messages
         function showMessage(message, type) {
-        # no message
+            // Simple alert for now - you can replace with a better notification system
+            alert(message);
         }
     </script>
 </body>
