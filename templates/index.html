@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anime Recommendation System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,657 +13,941 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
-            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            color: #333;
             overflow-x: hidden;
         }
 
         .container {
-            max-width: 1520px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            min-height: 100vh;
         }
 
-        .panel {
-            background: linear-gradient(145deg, #1e1e1e 0%, #121212 100%);
-            border: 2px solid #BB86FC;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .panel:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(187, 134, 252, 0.3);
-        }
-
-        .panel-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #BB86FC;
+        .header {
             text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
         }
 
-        .search-box {
-            width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #BB86FC;
-            border-radius: 15px;
-            background: rgba(30, 30, 30, 0.8);
-            color: #ffffff;
-            font-size: 14px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
         }
 
-        .search-box:focus {
-            outline: none;
-            border-color: #03DAC5;
-            background: rgba(37, 37, 37, 0.9);
-            box-shadow: 0 0 20px rgba(3, 218, 197, 0.3);
+        .header p {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: 300;
         }
 
-        .search-box::placeholder {
-            color: #b0b0b0;
+        /* Favorites Section */
+        .favorites-section {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out 0.2s both;
         }
 
-        .anime-list, .favorites-list, .recommendations-list {
-            height: 400px;
-            overflow-y: auto;
-            border: 2px solid #BB86FC;
-            border-radius: 15px;
-            background: linear-gradient(145deg, #1e1e1e 0%, #121212 100%);
-            padding: 15px;
-            margin-bottom: 15px;
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
         }
 
-        .anime-item, .favorite-item, .recommendation-item {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-            border: 1px solid #444444;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .search-container {
             position: relative;
-            overflow: hidden;
+            margin-bottom: 30px;
         }
 
-        .anime-item:hover, .favorite-item:hover {
-            background: linear-gradient(135deg, #03DAC5 0%, #00BFA5 100%);
-            border-color: #BB86FC;
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(3, 218, 197, 0.4);
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
         }
 
-        .anime-item.selected, .favorite-item.selected {
-            background: linear-gradient(135deg, #BB86FC 0%, #9965E8 100%);
-            border-color: #03DAC5;
-            transform: scale(1.02);
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .anime-item.in-favorites {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
-            border-color: #FF5722;
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
         }
 
-        .recommendation-item {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-            cursor: default;
-            padding: 15px;
+        .anime-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        .recommendation-item:hover {
-            background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%);
-            transform: none;
+        .anime-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
         }
 
-        .recommendation-rank {
-            font-weight: bold;
-            color: #03DAC5;
-            font-size: 16px;
+        .anime-option:hover {
+            background-color: #f8f9ff;
         }
 
-        .recommendation-name {
-            font-size: 14px;
-            margin: 5px 0;
+        .anime-option:last-child {
+            border-bottom: none;
         }
 
-        .recommendation-score {
+        .favorites-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            min-height: 60px;
+        }
+
+        .favorite-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .favorite-tag .remove-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 12px;
-            color: #b0b0b0;
-            font-style: italic;
+            transition: background-color 0.2s ease;
+        }
+
+        .favorite-tag .remove-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn {
-            width: 100%;
-            padding: 15px 25px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: bold;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s ease, height 0.3s ease;
-        }
-
-        .btn:hover:before {
-            width: 300px;
-            height: 300px;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #BB86FC 0%, #9965E8 100%);
-            color: #ffffff;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #03DAC5 0%, #00BFA5 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(187, 134, 252, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
-            color: #ffffff;
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
 
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
         }
 
-        .btn:disabled {
-            background: #2a2a2a;
-            color: #666666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        /* Recommendations Section */
+        .recommendations-section {
+            display: none;
+            animation: fadeInUp 1s ease-out;
         }
 
-        .btn:disabled:hover {
-            transform: none;
-            box-shadow: none;
+        .recommendations-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 30px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .status-message {
-            text-align: center;
-            padding: 15px;
-            border: 1px solid #03DAC5;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-            color: #b0b0b0;
-            font-style: italic;
-            margin-top: 15px;
+        .anime-card-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        .anime-rank {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .anime-rank::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+            border-radius: 50%;
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .anime-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+            cursor: pointer;
+            perspective: 1000px;
+            height: 300px;
+            flex: 1;
+            min-width: 0;
         }
 
-        .status-message.success {
-            border-color: #03DAC5;
-            color: #03DAC5;
-            background: linear-gradient(135deg, rgba(3, 218, 197, 0.1) 0%, rgba(0, 191, 165, 0.1) 100%);
+        .anime-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
 
-        .status-message.error {
-            border-color: #FF5252;
-            color: #FF5252;
-            background: linear-gradient(135deg, rgba(255, 82, 82, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .card-front {
+            background: white;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .anime-image-container {
+            position: relative;
+            width: 250px;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .anime-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .anime-card:hover .anime-image {
+            transform: scale(1.05);
+        }
+
+        .no-image-placeholder {
+            width: 120px;
+            height: 120px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #667eea;
+        }
+
+        .anime-score {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            z-index: 2;
+        }
+
+        .anime-info {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+        }
+
+        .anime-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .flip-hint {
+            font-size: 0.9rem;
+            color: #999;
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            margin-top: auto;
+        }
+
+        .anime-card:hover .flip-hint {
+            opacity: 1;
+        }
+
+        .mal-button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .mal-button {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mal-button:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .mal-logo {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .mal-message {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-align: center;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: white;
+            color: #667eea;
         }
 
         .loading {
-            display: none;
             text-align: center;
-            color: #BB86FC;
-            font-style: italic;
-            margin: 20px 0;
+            color: white;
+            font-size: 1.2rem;
+            margin: 40px 0;
         }
 
-        .loading.show {
-            display: block;
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
 
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s infinite;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #1e1e1e;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #BB86FC 0%, #9965E8 100%);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #03DAC5 0%, #00BFA5 100%);
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 1200px) {
-            .container {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 15px;
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
             }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .image-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #667eea;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 768px) {
-            .panel {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .favorites-section {
                 padding: 20px;
             }
-            
-            .anime-list, .favorites-list, .recommendations-list {
-                height: 300px;
+
+            .anime-card-wrapper {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .anime-rank {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .anime-card {
+                height: 350px;
+                width: 100%;
+            }
+
+            .card-front {
+                flex-direction: column;
+            }
+
+            .anime-image-container {
+                width: 100%;
+                height: 200px;
+            }
+
+            .anime-info {
+                padding: 20px;
+                text-align: center;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .mal-button {
+                font-size: 0.9rem;
+                padding: 12px 25px;
             }
         }
     </style>
 </head>
 <body>
+    <button class="back-button" onclick="showFavorites()">← Back to Favorites</button>
+
     <div class="container">
-        <!-- Left Panel - Available Animes -->
-        <div class="panel">
-            <h2 class="panel-title">🎌 Available Animes</h2>
-            <input type="text" class="search-box" id="searchBox" placeholder="Search for anime...">
-            <div class="anime-list" id="animeList">
-                <!-- Anime items will be populated here -->
-            </div>
-            <button class="btn btn-primary" id="addFavoriteBtn" disabled>Add to Favorites</button>
-            <button class="btn btn-danger" id="removeFavoriteBtn" disabled>Remove from Favorites</button>
+        <div class="header">
+            <h1>🎌 Anime Recommendations</h1>
+            <p>Discover your next favorite anime</p>
         </div>
 
-        <!-- Middle Panel - Favorite Animes -->
-        <div class="panel">
-            <h2 class="panel-title">❤️ My Favorite Animes</h2>
+        <!-- Favorites Section -->
+        <div class="favorites-section" id="favoritesSection">
+            <h2 class="section-title">Select Your Favorite Animes</h2>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="animeSearch" placeholder="Search for an anime..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+                <div class="anime-dropdown" id="animeDropdown"></div>
+            </div>
+
             <div class="favorites-list" id="favoritesList">
-                <!-- Favorite items will be populated here -->
+                <div class="empty-state">No favorites selected yet. Search and add some animes!</div>
             </div>
-            <button class="btn btn-primary" id="getRecommendationsBtn" disabled>Get Recommendations</button>
-            <button class="btn btn-danger" id="removeSelectedBtn" disabled>Remove Selected</button>
-            <button class="btn btn-danger" id="clearFavoritesBtn" disabled>Clear All Favorites</button>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="getRecommendations()">Get Recommendations</button>
+                <button class="btn btn-secondary" onclick="clearFavorites()">Clear All</button>
+            </div>
         </div>
 
-        <!-- Right Panel - Recommendations -->
-        <div class="panel">
-            <h2 class="panel-title">✨ Recommendations & Scores</h2>
-            <div class="recommendations-list" id="recommendationsList">
-                <!-- Recommendations will be populated here -->
-            </div>
-            <div class="loading" id="loadingMessage">Getting recommendations</div>
-            <div class="status-message" id="statusMessage">
-                Load your favorite animes and click 'Get Recommendations'
+        <!-- Recommendations Section -->
+        <div class="recommendations-section" id="recommendationsSection">
+            <div class="favorites-section">
+                <h2 class="section-title">Recommended for You</h2>
+                <div class="recommendations-grid" id="recommendationsGrid"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
         let allAnimes = [];
-        let favorites = [];
-        let selectedAnime = null;
-        let selectedFavorite = null;
+        let malLogoUrl = '';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            loadAllAnimes();
             loadFavorites();
-            setupEventListeners();
-        });
+            loadMalLogo();
 
-        function setupEventListeners() {
-            // Search functionality
-            document.getElementById('searchBox').addEventListener('input', filterAnimeList);
-            
-            // Button events
-            document.getElementById('addFavoriteBtn').addEventListener('click', addToFavorites);
-            document.getElementById('removeFavoriteBtn').addEventListener('click', removeFromFavorites);
-            document.getElementById('getRecommendationsBtn').addEventListener('click', getRecommendations);
-            document.getElementById('removeSelectedBtn').addEventListener('click', removeSelectedFavorite);
-            document.getElementById('clearFavoritesBtn').addEventListener('click', clearAllFavorites);
-        }
+            const searchInput = document.getElementById('animeSearch');
+            const dropdown = document.getElementById('animeDropdown');
 
-        function loadAllAnimes() {
-            fetch('/api/search_animes')
-                .then(response => response.json())
-                .then(data => {
-                    allAnimes = data;
-                    displayAnimeList(allAnimes);
-                })
-                .catch(error => {
-                    console.error('Error loading animes:', error);
-                    showStatusMessage('Error loading anime list', 'error');
-                });
-        }
-
-        function loadFavorites() {
-            fetch('/api/get_favorites')
-                .then(response => response.json())
-                .then(data => {
-                    favorites = data;
-                    displayFavoritesList();
-                    updateButtonStates();
-                })
-                .catch(error => {
-                    console.error('Error loading favorites:', error);
-                });
-        }
-
-        function displayAnimeList(animes) {
-            const animeList = document.getElementById('animeList');
-            animeList.innerHTML = '';
-            
-            animes.forEach(([id, name]) => {
-                const isInFavorites = favorites.some(fav => fav.id === id);
-                const div = document.createElement('div');
-                div.className = `anime-item ${isInFavorites ? 'in-favorites' : ''}`;
-                div.dataset.id = id;
-                div.textContent = `${name} (ID: ${id})`;
-                
-                div.addEventListener('click', () => selectAnime(id, name, div));
-                animeList.appendChild(div);
-            });
-        }
-
-        function displayFavoritesList() {
-            const favoritesList = document.getElementById('favoritesList');
-            favoritesList.innerHTML = '';
-            
-            favorites.forEach(favorite => {
-                const div = document.createElement('div');
-                div.className = 'favorite-item';
-                div.dataset.id = favorite.id;
-                div.textContent = `${favorite.name} (ID: ${favorite.id})`;
-                
-                div.addEventListener('click', () => selectFavorite(favorite.id, favorite.name, div));
-                favoritesList.appendChild(div);
-            });
-        }
-
-        function selectAnime(id, name, element) {
-            // Remove previous selection
-            document.querySelectorAll('.anime-item.selected').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            // Add selection to current item
-            element.classList.add('selected');
-            selectedAnime = { id, name };
-            
-            // Update button states
-            const isInFavorites = favorites.some(fav => fav.id === id);
-            document.getElementById('addFavoriteBtn').disabled = isInFavorites;
-            document.getElementById('removeFavoriteBtn').disabled = !isInFavorites;
-        }
-
-        function selectFavorite(id, name, element) {
-            // Remove previous selection
-            document.querySelectorAll('.favorite-item.selected').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            // Add selection to current item
-            element.classList.add('selected');
-            selectedFavorite = { id, name };
-            
-            // Update button states
-            document.getElementById('removeSelectedBtn').disabled = false;
-        }
-
-        function filterAnimeList() {
-    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-    
-    if (searchTerm.length === 0) {
-        displayAnimeList(allAnimes);
-        return;
-    }
-    
-    // Backend'den arama yap (çünkü artık tüm isimlerde arama yapıyor)
-    fetch(`/api/search_animes?q=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(data => {
-            displayAnimeList(data);
-        })
-        .catch(error => {
-            console.error('Error searching animes:', error);
-        });
-}
-
-        function addToFavorites() {
-            if (!selectedAnime) return;
-            
-            fetch('/api/add_favorite', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    anime_id: selectedAnime.id,
-                    anime_name: selectedAnime.name
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showStatusMessage(data.message, data.success ? 'success' : 'error');
-                if (data.success) {
-                    loadFavorites();
-                    // Clear search and refresh anime list
-                    document.getElementById('searchBox').value = '';
-                    displayAnimeList(allAnimes);
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length > 0) {
+                    searchAnimes(query);
+                } else {
+                    hideDropdown();
                 }
-            })
-            .catch(error => {
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    hideDropdown();
+                }
+            });
+        });
+
+        // Load MAL logo from backend
+        async function loadMalLogo() {
+            try {
+                const response = await fetch('/api/mal_logo');
+                const data = await response.json();
+                if (data.success) {
+                    malLogoUrl = data.logo_url;
+                }
+            } catch (error) {
+                console.error('Error loading MAL logo:', error);
+            }
+        }
+
+        // Search animes
+        async function searchAnimes(query) {
+            try {
+                const response = await fetch(`/api/search_animes?q=${encodeURIComponent(query)}`);
+                const animes = await response.json();
+                showDropdown(animes);
+            } catch (error) {
+                console.error('Error searching animes:', error);
+            }
+        }
+
+        // Show dropdown with search results
+        function showDropdown(animes) {
+            const dropdown = document.getElementById('animeDropdown');
+            dropdown.innerHTML = '';
+
+            if (animes.length === 0) {
+                dropdown.innerHTML = '<div class="anime-option">No animes found</div>';
+            } else {
+                animes.slice(0, 10).forEach(anime => {
+                    const option = document.createElement('div');
+                    option.className = 'anime-option';
+                    option.textContent = anime[1];
+                    option.onclick = () => addToFavorites(anime[0], anime[1]);
+                    dropdown.appendChild(option);
+                });
+            }
+
+            dropdown.style.display = 'block';
+        }
+
+        // Hide dropdown
+        function hideDropdown() {
+            document.getElementById('animeDropdown').style.display = 'none';
+        }
+
+        // Add anime to favorites
+        async function addToFavorites(animeId, animeName) {
+            try {
+                const response = await fetch('/api/add_favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        anime_id: animeId,
+                        anime_name: animeName
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadFavorites();
+                    document.getElementById('animeSearch').value = '';
+                    hideDropdown();
+                    showMessage(result.message, 'success');
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
                 console.error('Error adding favorite:', error);
-                showStatusMessage('Error adding to favorites', 'error');
-            });
+                showMessage('Error adding favorite', 'error');
+            }
         }
 
-        function removeFromFavorites() {
-            if (!selectedAnime) return;
-            
-            fetch('/api/remove_favorite', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    anime_id: selectedAnime.id,
-                    anime_name: selectedAnime.name
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showStatusMessage(data.message, data.success ? 'success' : 'error');
-                if (data.success) {
+        // Remove from favorites
+        async function removeFromFavorites(animeId, animeName) {
+            try {
+                const response = await fetch('/api/remove_favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        anime_id: animeId,
+                        anime_name: animeName
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
                     loadFavorites();
-                    displayAnimeList(allAnimes);
+                    showMessage(result.message, 'success');
+                } else {
+                    showMessage(result.message, 'error');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error removing favorite:', error);
-                showStatusMessage('Error removing from favorites', 'error');
-            });
+            }
         }
 
-        function removeSelectedFavorite() {
-            if (!selectedFavorite) return;
-            
-            fetch('/api/remove_favorite', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    anime_id: selectedFavorite.id,
-                    anime_name: selectedFavorite.name
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showStatusMessage(data.message, data.success ? 'success' : 'error');
-                if (data.success) {
-                    selectedFavorite = null;
-                    loadFavorites();
-                    displayAnimeList(allAnimes);
-                }
-            })
-            .catch(error => {
-                console.error('Error removing favorite:', error);
-                showStatusMessage('Error removing from favorites', 'error');
-            });
+        // Load favorites from server
+        async function loadFavorites() {
+            try {
+                const response = await fetch('/api/get_favorites');
+                const favorites = await response.json();
+                displayFavorites(favorites);
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+            }
         }
 
-        function clearAllFavorites() {
-            if (!confirm('Are you sure you want to clear all favorites?')) return;
-            
-            fetch('/api/clear_favorites', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                showStatusMessage(data.message, 'success');
-                loadFavorites();
-                displayAnimeList(allAnimes);
-                document.getElementById('recommendationsList').innerHTML = '';
-            })
-            .catch(error => {
-                console.error('Error clearing favorites:', error);
-                showStatusMessage('Error clearing favorites', 'error');
-            });
-        }
+        // Display favorites
+        function displayFavorites(favorites) {
+            const favoritesList = document.getElementById('favoritesList');
 
-        function getRecommendations() {
             if (favorites.length === 0) {
-                showStatusMessage('Please add some favorite animes first!', 'error');
+                favoritesList.innerHTML = '<div class="empty-state">No favorites selected yet. Search and add some animes!</div>';
+            } else {
+                favoritesList.innerHTML = favorites.map(anime => `
+                    <div class="favorite-tag">
+                        <span>${anime.name}</span>
+                        <button class="remove-btn" onclick="removeFromFavorites(${anime.id}, '${anime.name.replace(/'/g, "\\'")}')">×</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Clear all favorites
+        async function clearFavorites() {
+            try {
+                const response = await fetch('/api/clear_favorites', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadFavorites();
+                    showMessage(result.message, 'success');
+                }
+            } catch (error) {
+                console.error('Error clearing favorites:', error);
+            }
+        }
+
+        // Get recommendations
+        async function getRecommendations() {
+            const recommendationsSection = document.getElementById('recommendationsSection');
+            const favoritesSection = document.getElementById('favoritesSection');
+            const backButton = document.querySelector('.back-button');
+            const recommendationsGrid = document.getElementById('recommendationsGrid');
+
+            // Show loading
+            recommendationsGrid.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Getting your recommendations...</div>
+                </div>
+            `;
+
+            // Hide favorites section and show recommendations
+            favoritesSection.style.display = 'none';
+            recommendationsSection.style.display = 'block';
+            backButton.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/get_recommendations', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayRecommendations(result.recommendations);
+                } else {
+                    recommendationsGrid.innerHTML = `
+                        <div class="loading">
+                            <div style="color: #ff6b6b;">${result.message}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error getting recommendations:', error);
+                recommendationsGrid.innerHTML = `
+                    <div class="loading">
+                        <div style="color: #ff6b6b;">Error getting recommendations</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Display recommendations
+        function displayRecommendations(recommendations) {
+            const recommendationsGrid = document.getElementById('recommendationsGrid');
+
+            if (recommendations.length === 0) {
+                recommendationsGrid.innerHTML = '<div class="loading">No recommendations found</div>';
                 return;
             }
-            
-            // Show loading
-            document.getElementById('loadingMessage').classList.add('show');
-            document.getElementById('getRecommendationsBtn').disabled = true;
-            
-            fetch('/api/get_recommendations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Hide loading
-                document.getElementById('loadingMessage').classList.remove('show');
-                document.getElementById('getRecommendationsBtn').disabled = false;
-                
-                if (data.success) {
-                    displayRecommendations(data.recommendations);
-                    showStatusMessage(data.message, 'success');
-                } else {
-                    showStatusMessage(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error getting recommendations:', error);
-                document.getElementById('loadingMessage').classList.remove('show');
-                document.getElementById('getRecommendationsBtn').disabled = false;
-                showStatusMessage('Error getting recommendations', 'error');
-            });
-        }
 
-        function displayRecommendations(recommendations) {
-            const recommendationsList = document.getElementById('recommendationsList');
-            recommendationsList.innerHTML = '';
-            
-            recommendations.forEach((recommendation, index) => {
-                const div = document.createElement('div');
-                div.className = 'recommendation-item';
-                
-                div.innerHTML = `
-                    <div class="recommendation-rank">#${index + 1}</div>
-                    <div class="recommendation-name">${recommendation.name}</div>
-                    <div class="recommendation-score">Score: ${recommendation.score.toFixed(4)} | ID: ${recommendation.id}</div>
+            recommendationsGrid.innerHTML = recommendations.map((anime, index) => {
+                const imageElement = anime.image_url
+                    ? `<img src="${anime.image_url}" alt="${anime.name}" class="anime-image" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+                    : '';
+
+                const placeholderElement = anime.image_url
+                    ? `<div class="no-image-placeholder" style="display: none;">🎌</div>`
+                    : `<div class="no-image-placeholder">🎌</div>`;
+
+                const malButton = anime.mal_url
+                    ? `<a href="${anime.mal_url}" target="_blank" class="mal-button">
+                        ${malLogoUrl ? `<img src="${malLogoUrl}" alt="MAL" class="mal-logo">` : '🔗'}
+                        View on MyAnimeList
+                       </a>`
+                    : `<div class="mal-message">MyAnimeList link not available</div>`;
+
+                return `
+                    <div class="anime-card-wrapper" style="animation-delay: ${index * 0.1}s">
+                        <div class="anime-rank">${index + 1}</div>
+                        <div class="anime-card" onclick="flipCard(this)">
+                            <div class="card-inner">
+                                <div class="card-front">
+                                    <div class="anime-image-container">
+                                        ${imageElement}
+                                        ${placeholderElement}
+                                        <div class="anime-score">Score: ${anime.score.toFixed(2)}</div>
+                                    </div>
+                                    <div class="anime-info">
+                                        <div class="anime-name">${anime.name}</div>
+                                        <div class="flip-hint">Click to see MyAnimeList link →</div>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <div class="mal-button-container">
+                                        ${malButton}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
-                
-                recommendationsList.appendChild(div);
-            });
+            }).join('');
         }
 
-        function showStatusMessage(message, type = 'info') {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
-            
-            // Auto-hide after 5 seconds for success/error messages
-            if (type === 'success' || type === 'error') {
-                setTimeout(() => {
-                    statusMessage.textContent = 'Load your favorite animes and click \'Get Recommendations\'';
-                    statusMessage.className = 'status-message';
-                }, 5000);
+        // Flip card animation
+        function flipCard(card) {
+            const cardInner = card.querySelector('.card-inner');
+            cardInner.classList.toggle('flipped');
+
+            // Prevent link click from flipping card
+            const malButton = card.querySelector('.mal-button');
+            if (malButton) {
+                malButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
             }
         }
 
-        function updateButtonStates() {
-            // Update Get Recommendations button
-            document.getElementById('getRecommendationsBtn').disabled = favorites.length === 0;
-            
-            // Update Clear Favorites button
-            document.getElementById('clearFavoritesBtn').disabled = favorites.length === 0;
-            
-            // Reset selection buttons
-            document.getElementById('removeSelectedBtn').disabled = true;
-            document.getElementById('addFavoriteBtn').disabled = true;
-            document.getElementById('removeFavoriteBtn').disabled = true;
-            
-            // Clear selections
-            selectedAnime = null;
-            selectedFavorite = null;
-            
-            // Remove all selections visually
-            document.querySelectorAll('.anime-item.selected, .favorite-item.selected').forEach(item => {
-                item.classList.remove('selected');
-            });
+        // Show favorites section
+        function showFavorites() {
+            document.getElementById('favoritesSection').style.display = 'block';
+            document.getElementById('recommendationsSection').style.display = 'none';
+            document.querySelector('.back-button').style.display = 'none';
+        }
+
+        // Show messages
+        function showMessage(message, type) {
+            // Simple alert for now - you can replace with a better notification system
+            alert(message);
         }
     </script>
 </body>
