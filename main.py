@@ -10,12 +10,14 @@ app.secret_key = '1903bjk'
 
 
 class AnimeRecommendationSystem:
-    def __init__(self, checkpoint_path, dataset_path, animes_path, images_path, mal_urls_path):
+    def __init__(self, checkpoint_path, dataset_path, animes_path, images_path, mal_urls_path,type_seq_path):
         self.model = None
         self.dataset = None
         self.id_to_anime = {}
         self.id_to_url = {}
         self.id_to_mal_url = {}
+        self.type_seq_path = type_seq_path
+        self.id_to_type_seq = {}
         self.checkpoint_path = checkpoint_path
         self.dataset_path = dataset_path
         self.animes_path = animes_path
@@ -52,6 +54,14 @@ class AnimeRecommendationSystem:
                 print(f"Warning: Could not load MAL URLs: {str(e)}")
                 self.id_to_mal_url = {}
 
+            try:
+                with open(self.type_seq_path, "r", encoding="utf-8") as file:
+                    self.id_to_type_seq = json.load(file)
+                print(f"Loaded {len(self.id_to_type_seq)} type/sequel info")
+            except Exception as e:
+                print(f"Warning: Could not load type/sequel info: {str(e)}")
+                self.id_to_type_seq = {}
+
             self.model = model_factory(args)
             self.load_checkpoint()
 
@@ -85,11 +95,10 @@ class AnimeRecommendationSystem:
     def get_anime_mal_url(self, anime_id):
         return self.id_to_mal_url.get(str(anime_id), None)
 
-    def get_recommendations(self, favorite_anime_ids, num_recommendations=40):
+    def get_recommendations(self, favorite_anime_ids, num_recommendations=40, filters=None):
         try:
             if not favorite_anime_ids:
                 return [], [], "Please add some favorite animes first!"
-
             smap = self.dataset
             inverted_smap = {v: k for k, v in smap.items()}
 
@@ -121,12 +130,15 @@ class AnimeRecommendationSystem:
 
                     if anime_id in favorite_anime_ids:
                         continue
-                    if str(anime_id) in self.id_to_anime:
-                        anime_data = self.id_to_anime[str(anime_id)]
 
+                    if str(anime_id) in self.id_to_anime:
+                        # Filtreleme kontrolü
+                        if filters and not self._should_include_anime(anime_id, filters):
+                            continue
+
+                        anime_data = self.id_to_anime[str(anime_id)]
                         anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
                             anime_data)
-
                         image_url = self.get_anime_image_url(anime_id)
                         mal_url = self.get_anime_mal_url(anime_id)
 
@@ -146,6 +158,35 @@ class AnimeRecommendationSystem:
 
         except Exception as e:
             return [], [], f"Error during prediction: {str(e)}"
+
+    def _should_include_anime(self, anime_id, filters):
+        """Filtrelere göre anime'nin dahil edilip edilmeyeceğini kontrol eder"""
+        type_seq_info = self.id_to_type_seq.get(str(anime_id))
+        if not type_seq_info or len(type_seq_info) < 2:
+            return True  # Bilgi yoksa dahil et
+
+        anime_type = type_seq_info[0]
+        is_sequel = type_seq_info[1]
+
+        # Sequel filtresi
+        if 'show_sequels' in filters:
+            if not filters['show_sequels'] and is_sequel:
+                return False
+
+        # Tür filtreleri
+        if 'show_movies' in filters:
+            if not filters['show_movies'] and anime_type == 'MOVIE':
+                return False
+
+        if 'show_tv' in filters:
+            if not filters['show_tv'] and anime_type == 'TV':
+                return False
+
+        if 'show_ova' in filters:
+            if not filters['show_ova'] and anime_type in ['ONA', 'OVA', 'SPECIAL']:
+                return False
+
+        return True
 
 
 recommendation_system = None
@@ -245,7 +286,13 @@ def get_recommendations():
     if 'favorites' not in session or not session['favorites']:
         return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
 
-    recommendations, scores, message = recommendation_system.get_recommendations(session['favorites'])
+    data = request.get_json() or {}
+    filters = data.get('filters', {})
+
+    recommendations, scores, message = recommendation_system.get_recommendations(
+        session['favorites'],
+        filters=filters
+    )
 
     if recommendations:
         return jsonify({
@@ -279,7 +326,8 @@ def main():
         "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
         "1s-8FM1Wi2wOWJ9cstvm-O1_6XculTcTG": "dataset.pkl",
         "1SOm1llcTKfhr-RTHC0dhaZ4AfWPs8wRx": "id_to_url.json",
-        "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json"
+        "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json",
+        "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json"
     }
 
     def download_from_gdrive(file_id, output_path):
@@ -301,6 +349,7 @@ def main():
     try:
         images_path = "id_to_url.json"
         mal_urls_path = "anime_to_malurl.json"
+        type_seq_path = "anime_to_typenseq.json"
 
         if not os.path.exists(images_path):
             print(f"Warning: {images_path} not found. Images will not be displayed.")
@@ -313,7 +362,8 @@ def main():
             "dataset.pkl",
             "animes.json",
             images_path,
-            mal_urls_path
+            mal_urls_path,
+            type_seq_path
         )
         print("Recommendation system initialized successfully!")
     except Exception as e:
