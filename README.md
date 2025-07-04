@@ -5,7 +5,7 @@ https://animerecbertweb-production.up.railway.app/
 https://github.com/MRamazan/AnimeRecBERT
 
 ## Warning
-**main.py script automatically downloads 7 files from my drive. pretrained model, dataset mappings, anime information etc.**
+**main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
 
 ## For Linux, Macos
 ```bash
