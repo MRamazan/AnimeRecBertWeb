@@ -1716,11 +1716,16 @@
 
 .about-section {
     margin-top: 60px;
-    padding: 40px 0;
+    padding: 40px;
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(5px);
     border-top: 1px solid rgba(255,255,255,0.1);
+
+    /* Yeni eklenenler */
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
+
 
 .about-content {
     display: grid;
@@ -1870,7 +1875,7 @@ body {
 /* 17. About section background'unu değiştirin */
 .about-section {
     background: rgba(25, 25, 46, 0.2);
-    /* Diğer özellikler aynı kalacak */
+
 }
 
 /* 18. Search input placeholder color'unu ekleyin */
