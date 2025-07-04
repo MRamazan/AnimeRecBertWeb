@@ -1,5 +1,5 @@
 ## Web Demo 🌐
-https://animerecbertweb-production.up.railway.app/
+www.animerecbert.online
 
 ## Main Code
 https://github.com/MRamazan/AnimeRecBERT
