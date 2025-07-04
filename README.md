@@ -27,3 +27,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## Preview
+<img src="favorites-selection.jpg" alt="Recommendations" width="700">
+<img src="recommendations.jpg" alt="Favorite Selection" width="700">
+
