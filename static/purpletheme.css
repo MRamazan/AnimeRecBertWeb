@@ -555,7 +555,7 @@
     position: relative;
     border-radius: 20px;
     padding: 2px; /* Kenar şeridin kalınlığı */
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Turuncu gradient şerit */
+    background: linear-gradient(45deg, #3b4cca, #523b80);
 
     /* İç kısım için ayrı bir arka plan katmanı */
     /* overflow hidden ile köşe yumuşaklığı korunur */
@@ -1990,4 +1990,820 @@ body {
 .confirm-btn.confirm:hover {
     background: linear-gradient(135deg, #ff5252 0%, #d63031 100%);
     transform: translateY(-2px);
+}
+/* ===========================================
+   MOBİL RESPONSIVE CSS KODU
+   ========================================== */
+
+/* 1. BASE MOBILE SETTINGS - Temel Mobil Ayarları */
+/* ===== SADECE ANİME KARTLARI İÇİN MOBİL DÜZELTMESİ ===== */
+/* ===== SOCİAL BUTTON VE TEMA BUTONLARINI GİZLE ===== */
+@media screen and (max-width: 768px) {
+    /* Social media butonları gizle */
+    .social-buttons,
+    .social-media-buttons,
+    .social-links,
+    .social-container,
+    .social-btn,
+    .share-buttons,
+    .social-share,
+    .social-icons {
+        display: none !important;
+    }
+
+    /* Tema değiştirme butonları gizle */
+    .theme-toggle,
+    .theme-switcher,
+    .theme-button,
+    .theme-switcher-toggle
+    .themeOptions
+    .theme-options
+    .theme-option theme-green
+    .dark-mode-toggle,
+    .light-mode-toggle,
+    .mode-switcher,
+    .theme-switcher {
+        display: none !important;
+    }
+
+    /* Diğer istenmeyen butonları gizle */
+    .settings-button,
+    .options-button,
+    .menu-toggle-mobile {
+        display: none !important;
+    }
+}
+
+/* ===== ANIME KARTLARI MOBİL STÝLLERI ===== */
+@media screen and (max-width: 768px) {
+
+    /* Ana kart konteyner - Grid sistemi */
+    .recommendations-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+        padding: 0 5px;
+    }
+
+    /* Anime Card Wrapper - Temiz başlangıç */
+    .anime-card-wrapper {
+        background: "none";
+        display: block;
+        border-radius: 12px;
+    }
+
+    /* Anime Card - Sabit boyutlar ve sabit renk */
+    .anime-card {
+        width: 100%;
+        height: 500px; /* Çok daha fazla artırıldı: 420px -> 500px */
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        transition: transform 0.3s ease;
+
+        /* Kenar şeritleri için sabit renk */
+        border: 3px solid #3b4cca;
+    }
+
+    /* Flip kartlar için content wrapper */
+    .anime-card .content {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+    }
+
+    /* Kart ön yüzü - sabit renk */
+    .card-front {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        display: flex;
+        flex-direction: column;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    /* Kart arka yüzü - sabit renk */
+    .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        transform: rotateY(180deg);
+        border-radius: 12px;
+        padding: 15px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        color: white;
+    }
+
+    /* Görsel konteyneri - 225x317 orijinal boyut oranına uygun */
+    .anime-image-container {
+        width: 100%;
+        height: 320px; /* Çok daha fazla artırıldı: 240px -> 320px */
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Anime görseli - 225x317 oranına uygun yerleştirme */
+    .anime-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center center;
+        display: block;
+        /* 225x317 orijinal boyut için optimize edildi */
+        /* Aspect ratio: 225/317 = 0.709 */
+    }
+
+    /* Görsel yoksa placeholder */
+    .no-image-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2); /* Sabit renk ile uyumlu şeffaf beyaz */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8); /* Beyaz renk */
+    }
+
+    /* Anime bilgi alanı - resim altındaki kısım */
+    .anime-info {
+        flex: 1;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 180px; /* Daha fazla artırıldı: 160px -> 180px */
+        text-align: center;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    /* Anime ismi */
+    .anime-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 8px;
+        color: white;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+    }
+
+    /* Çevirme ipucu - daha fazla sola kaydırıldı */
+    .flip-hint {
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.8);
+        opacity: 0.8;
+        margin-top: auto;
+        margin-left: -10px; /* Daha fazla sola kaydırıldı: -6px -> -10px */
+        font-style: italic;
+        text-align: left;
+    }
+
+    /* Puan gösterimi */
+    .anime-score {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        z-index: 10;
+    }
+
+    /* Zaten izlendi butonu - İyileştirilmiş */
+    .already-watched-btn {
+        position: absolute;
+        bottom: 16px;
+        right: 8px;
+        padding: 8px 16px; /* Artırıldı: 4px 8px -> 8px 16px */
+        font-size: 0.75rem; /* Artırıldı: 0.65rem -> 0.75rem */
+        font-weight: 600; /* Yazı kalınlığı eklendi */
+        border-radius: 20px; /* Artırıldı: 12px -> 20px */
+        background: linear-gradient(45deg, #ffb347, #c9882b);
+        color: white;
+        border: 2px solid white; /* Beyaz kenarlık eklendi */
+        box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4); /* Gölge eklendi */
+        cursor: pointer;
+        z-index: 10;
+        min-width: 80px; /* Artırıldı: 60px -> 80px */
+        text-align: center;
+        transition: all 0.3s ease; /* Animasyon eklendi */
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Yazı gölgesi */
+    }
+
+    /* Already watched buton hover efekti */
+    .already-watched-btn:hover {
+        background: #ff5722;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 87, 34, 0.5);
+    }
+
+    /* Already watched buton aktif durumu */
+    .already-watched-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+    }
+
+    /* Silme butonu */
+    .delete-button {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(244, 67, 54, 0.9);
+        color: white;
+        border: none;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Alt bölüm (türler vs) */
+    .anime-bottom-section {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Tür etiketleri konteyneri */
+    .genres-container-front {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    /* Tür etiketleri - Taşma düzeltmesi */
+    .genre-tag-front {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        white-space: nowrap;
+        /* Aşağıdaki satırlar kaldırıldı - genre taşması için */
+        /* overflow: hidden; */
+        /* text-overflow: ellipsis; */
+        /* max-width: 60px; */
+    }
+
+    /* MAL butonu - büyütüldü ve tam ortalandı */
+    .mal-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px; /* Büyütüldü: 8px -> 10px */
+        padding: 18px 24px; /* Büyütüldü: 14px 20px -> 18px 24px */
+        font-size: 0.95rem; /* Büyütüldü: 0.85rem -> 0.95rem */
+        font-weight: 700; /* Daha kalın yazı tipi */
+        border-radius: 28px; /* Büyütüldü: 24px -> 28px */
+        background: #ffffff;
+        color: #3b4cca;
+        text-decoration: none;
+        margin: 0 auto; /* Tam ortalandı */
+        transition: all 0.3s ease;
+        min-width: 180px; /* Büyütüldü: 160px -> 180px */
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .mal-button:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 255, 255, 0.4);
+    }
+
+    /* MAL logosu */
+    .mal-logo {
+        width: 20px; /* Büyütüldü: 18px -> 20px */
+        height: 20px; /* Büyütüldü: 18px -> 20px */
+        flex-shrink: 0;
+    }
+
+    /* MAL mesajı */
+    .mal-message {
+        font-size: 0.7rem;
+        text-align: center;
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.3;
+    }
+
+    /* Hover efektleri - sadece desktop */
+    @media (hover: hover) {
+        .anime-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+    }
+
+    /* Touch cihazlar için */
+    .anime-card:active {
+        transform: scale(0.98);
+    }
+
+    /* Flip animasyonu */
+    .anime-card.flipped .content {
+        transform: rotateY(180deg);
+    }
+
+    /* Anime rank gizle */
+    .anime-rank {
+        width: 0px;
+        height: 0px;
+        display: none;
+    }
+
+    /* Card inner border radius */
+    .card-inner {
+        border-radius: 12px;
+    }
+}
+
+/* ===== YATAY MOD İYİLEŞTİRMELERİ ===== */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .recommendations-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .anime-card {
+        height: 380px; /* Yatay modda artırıldı: 300px -> 380px */
+        border: 2px solid #3b4cca; /* Sabit renk */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    .anime-image-container {
+        height: 220px; /* Artırıldı: 180px -> 220px */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    /* Yatay modda resim optimizasyonu */
+    .anime-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center center;
+    }
+
+    .anime-info {
+        padding: 8px;
+        min-height: 100px; /* Artırıldı: 80px -> 100px */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    .anime-name {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 1;
+        margin-bottom: 4px;
+        color: white;
+    }
+
+    .flip-hint {
+        font-size: 0.6rem;
+        margin-left: -12px; /* Yatay modda daha fazla sola kaydırıldı: -6px -> -12px */
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Yatay mod için genre taşma düzeltmesi */
+    .genre-tag-front {
+        font-size: 0.55rem;
+        padding: 1px 4px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        white-space: nowrap;
+        /* Taşma özellikleri kaldırıldı */
+    }
+
+    /* Yatay modda MAL butonu */
+    .mal-button {
+        padding: 14px 18px;
+        font-size: 0.8rem;
+        min-width: 140px;
+        background: #ffffff;
+        color: #3b4cca;
+    }
+
+    .mal-logo {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Yatay modda already watched butonu */
+    .already-watched-btn {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+        min-width: 70px;
+        background: #ff6b35;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+        bottom: 12px;
+        right: 8px;
+    }
+
+    .card-back {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+
+    /* Yatay modda no-image-placeholder */
+    .no-image-placeholder {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* ===== ÇOK KÜÇÜK EKRANLAR (iPhone SE, vs) ===== */
+@media screen and (max-width: 375px) {
+    .recommendations-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 0 2px;
+    }
+
+    .anime-card {
+        height: 460px; /* Artırıldı: 380px -> 460px */
+        border: 2px solid #3b4cca; /* Sabit renk */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    .anime-image-container {
+        height: 280px; /* Artırıldı: 200px -> 280px */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    /* Küçük ekranlarda resim optimizasyonu */
+    .anime-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center center;
+    }
+
+    .anime-info {
+        padding: 10px;
+        min-height: 140px; /* Artırıldı: 120px -> 140px */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    .anime-name {
+        font-size: 0.85rem;
+        color: white;
+    }
+
+    .anime-score {
+        top: 6px;
+        right: 6px;
+        padding: 3px 6px;
+        font-size: 0.65rem;
+    }
+
+    /* Küçük ekranlarda already watched butonu */
+    .already-watched-btn {
+        bottom: 10px;
+        right: 6px;
+        padding: 6px 12px; /* Artırıldı: 3px 6px -> 6px 12px */
+        font-size: 0.7rem; /* Artırıldı: 0.6rem -> 0.7rem */
+        font-weight: 600;
+        min-width: 65px; /* Artırıldı: 50px -> 65px */
+        background: #ff6b35;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+        border-radius: 16px;
+    }
+
+    .delete-button {
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+    }
+
+    .flip-hint {
+        margin-left: -12px; /* Küçük ekranlarda daha fazla sola kaydırıldı: -6px -> -12px */
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Küçük ekranlar için genre taşma düzeltmesi */
+    .genre-tag-front {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        white-space: nowrap;
+        /* Taşma özellikleri kaldırıldı */
+    }
+
+    /* Küçük ekranlarda MAL butonu */
+    .mal-button {
+        padding: 16px 20px;
+        font-size: 0.9rem;
+        min-width: 160px;
+        background: #ffffff;
+        color: #3b4cca;
+    }
+
+    .card-back {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+
+    /* Küçük ekranlarda no-image-placeholder */
+    .no-image-placeholder {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* ===== ULTRA KÜÇÜK EKRANLAR (320px ve altı) ===== */
+@media screen and (max-width: 320px) {
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .anime-card {
+        height: 540px; /* Çok daha fazla artırıldı: 460px -> 540px */
+        max-width: 100%;
+        border: 2px solid #3b4cca; /* Sabit renk */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    .anime-image-container {
+        height: 360px; /* Çok daha fazla artırıldı: 280px -> 360px */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    /* Ultra küçük ekranlarda resim optimizasyonu */
+    .anime-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center center;
+    }
+
+    .anime-info {
+        min-height: 140px; /* Artırıldı: 120px -> 140px */
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    .anime-name {
+        color: white;
+    }
+
+    .flip-hint {
+        margin-left: -12px; /* Ultra küçük ekranlarda daha fazla sola kaydırıldı: -6px -> -12px */
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Ultra küçük ekranlar için genre taşma düzeltmesi */
+    .genre-tag-front {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        white-space: nowrap;
+        /* Taşma özellikleri kaldırıldı */
+    }
+
+    /* Ultra küçük ekranlarda already watched butonu */
+    .already-watched-btn {
+        padding: 8px 16px;
+        font-size: 0.75rem;
+        min-width: 80px;
+        background: #ff6b35;
+        border: 2px solid white;
+        box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+        border-radius: 20px;
+        font-weight: 600;
+        bottom: 18px;
+        right: 8px;
+    }
+
+    /* Ultra küçük ekranlarda MAL butonu */
+    .mal-button {
+        padding: 18px 24px;
+        font-size: 0.95rem;
+        min-width: 180px;
+        background: #ffffff;
+        color: #3b4cca;
+    }
+
+    .card-back {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+
+    /* Ultra küçük ekranlarda no-image-placeholder */
+    .no-image-placeholder {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* ===== DARK MODE DESTEK ===== */
+@media screen and (max-width: 768px) {
+    .dark-mode .anime-card {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: var(--text-color-dark, #eee);
+        border: 3px solid #3b4cca; /* Sabit renk */
+    }
+
+    .dark-mode .anime-image-container {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+    }
+
+    .dark-mode .anime-info {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    .dark-mode .card-back {
+        background: #3b4cca; /* Sabit renk - gradient kaldırıldı */
+        color: white;
+    }
+
+    .dark-mode .no-image-placeholder {
+        background: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .dark-mode .anime-name {
+        color: white;
+    }
+
+    .dark-mode .flip-hint {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Dark mode için genre taşma düzeltmesi */
+    .dark-mode .genre-tag-front {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        white-space: nowrap;
+        /* Taşma özellikleri kaldırıldı */
+    }
+
+    .dark-mode .mal-message {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Dark mode'da MAL butonu */
+    .dark-mode .mal-button {
+        background: #ffffff;
+        color: #3b4cca;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+    }
+
+    .dark-mode .mal-button:hover {
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 6px 16px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Dark mode'da already watched butonu */
+    .dark-mode .already-watched-btn {
+        background: #ff6b35;
+        color: white;
+        border: 2px solid white;
+        box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+    }
+
+    .dark-mode .already-watched-btn:hover {
+        background: #ff5722;
+        box-shadow: 0 4px 12px rgba(255, 87, 34, 0.5);
+    }
+}
+
+/* ===== ACCESSIBILITY İYİLEŞTİRMELERİ ===== */
+@media screen and (max-width: 768px) {
+    /* Fokus göstergeleri */
+    .anime-card:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+        border-radius: 12px;
+    }
+
+    .mal-button:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+    }
+
+    .already-watched-btn:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+    }
+
+    /* Animasyon azaltma */
+    @media (prefers-reduced-motion: reduce) {
+        .anime-card .content {
+            transition: none;
+        }
+
+        .anime-card:hover,
+        .anime-card:active {
+            transform: none;
+        }
+
+        .mal-button {
+            transition: none;
+        }
+
+        .mal-button:hover {
+            transform: none;
+        }
+
+        .already-watched-btn {
+            transition: none;
+        }
+
+        .already-watched-btn:hover {
+            transform: none;
+        }
+    }
+}
+
+/* ===== PERFORMANS İYİLEŞTİRMELERİ ===== */
+@media screen and (max-width: 768px) {
+    .anime-card {
+        will-change: transform;
+        contain: layout style paint;
+    }
+
+    .anime-image {
+        will-change: transform;
+        contain: layout style paint;
+    }
+
+    .anime-card .content {
+        will-change: transform;
+    }
+
+    .mal-button {
+        will-change: transform;
+    }
+
+    .already-watched-btn {
+        will-change: transform;
+    }
 }
