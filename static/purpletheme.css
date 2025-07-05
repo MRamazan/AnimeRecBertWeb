@@ -2209,7 +2209,7 @@ body {
     /* Zaten izlendi butonu - İyileştirilmiş */
     .already-watched-btn {
         position: absolute;
-        bottom: 16px;
+        bottom: 18px;
         right: 8px;
         padding: 8px 16px; /* Artırıldı: 4px 8px -> 8px 16px */
         font-size: 0.75rem; /* Artırıldı: 0.65rem -> 0.75rem */
