@@ -2209,35 +2209,59 @@ body {
     /* Zaten izlendi butonu - İyileştirilmiş */
     .already-watched-btn {
         position: absolute;
-        bottom: 18px;
-        right: 8px;
-        padding: 8px 16px; /* Artırıldı: 4px 8px -> 8px 16px */
-        font-size: 0.75rem; /* Artırıldı: 0.65rem -> 0.75rem */
-        font-weight: 600; /* Yazı kalınlığı eklendi */
-        border-radius: 20px; /* Artırıldı: 12px -> 20px */
-        background: linear-gradient(45deg, #ffb347, #c9882b);
-        color: white;
-        border: 2px solid white; /* Beyaz kenarlık eklendi */
-        box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4); /* Gölge eklendi */
+        bottom: 24px;
+        right: 12px;
+        padding: 8px 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #667eea;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         cursor: pointer;
         z-index: 10;
-        min-width: 80px; /* Artırıldı: 60px -> 80px */
+        min-width: 80px;
         text-align: center;
-        transition: all 0.3s ease; /* Animasyon eklendi */
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Yazı gölgesi */
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
     }
 
-    /* Already watched buton hover efekti */
+    /* İzlendi butonu - check ikonu */
+    .already-watched-btn::before {
+        content: '✓';
+        font-size: 0.8rem;
+        font-weight: 900;
+    }
+
+    /* İzlendi butonu hover efekti */
     .already-watched-btn:hover {
-        background: #ff5722;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(255, 87, 34, 0.5);
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        color: #5a67d8;
     }
 
-    /* Already watched buton aktif durumu */
+    /* İzlendi butonu aktif durumu */
     .already-watched-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* İzlendi butonu - izlenmiş durumu */
+    .already-watched-btn.watched {
+        background: rgba(72, 187, 120, 0.9);
+        color: white;
+        border-color: rgba(72, 187, 120, 0.5);
+    }
+
+    .already-watched-btn.watched:hover {
+        background: rgba(72, 187, 120, 1);
+        transform: translateY(-2px);
     }
 
     /* Silme butonu */
