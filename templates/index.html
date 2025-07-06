@@ -80,6 +80,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
+
         .theme-switcher-toggle {
             background: none;
             border: none;
@@ -167,6 +168,18 @@
         .theme-orange .theme-color {
             background: linear-gradient(45deg, #ffa500, #ff4500);
         }
+        .product-hunt {
+            position: fixed;
+            top: 17px;
+            right: 235px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
 
         /* Mobile responsive */
         @media (max-width: 768px) {
@@ -205,7 +218,9 @@
         <div class="theme-option"></div>
         <div class="anime-card"></div>
     </div>
-
+<div class="product-hunt">
+    <a href="https://www.producthunt.com/products/bert-anime-recommender?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-bert&#0045;anime&#0045;recommender" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=988808&theme=light&t=1751827929975" alt="BERT&#0032;Anime&#0032;Recommender - Anime&#0032;Recommendation&#0032;with&#0032;BERT&#0032;Transformer | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+</div>
     <!-- Theme Switcher -->
     <div class="theme-switcher">
         <button class="theme-switcher-toggle" onclick="toggleThemeOptions()">🎨</button>
@@ -1062,16 +1077,6 @@ function openBlacklistModal() {
 function closeBlacklistModal() {
     document.getElementById('blacklistModal').classList.remove('show');
 }
-        
     </script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-THGPD4P709"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-THGPD4P709');
-</script>
-
 </body>
 </html>
