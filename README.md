@@ -4,10 +4,8 @@ www.animerecbert.online
 ## Main Code
 https://github.com/MRamazan/AnimeRecBERT
 
-## Warning
-**main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
-
 ## For Linux, Macos
+If you want to run locally, **main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
 ```bash
 git clone https://github.com/MRamazan/AnimeRecBertWeb
 cd AnimeRecBertWeb
@@ -18,6 +16,7 @@ python main.py
 ```
 
 ## For Windows
+If you want to run locally, **main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
 ```bash
 git clone https://github.com/MRamazan/AnimeRecBertWeb
 cd AnimeRecBertWeb
