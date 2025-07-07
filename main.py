@@ -8,6 +8,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from datetime import datetime
 import random
 import re
+from flask import Flask, render_template, request, jsonify, session, Response
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
@@ -18,7 +19,7 @@ active_users = {}
 MAX_MESSAGES = 300
 
 def generate_username():
-    adjectives = ['Cool', 'Awesome', 'Swift', 'Bright', 'Happy', 'Smart', 'Kind', 'Brave', 'Calm', 'Epic']
+    adjectives = ['Cool', 'Awesome', 'Swift', 'Bright', 'Happy', 'Smart', 'Kind', 'Brave', 'Calm', 'Epic', "Black"]
     nouns = ['Otaku', 'Ninja', 'Samurai', 'Dragon', 'Phoenix', 'Tiger', 'Wolf', 'Eagle', 'Fox', 'Bear']
     return f"{random.choice(adjectives)}{random.choice(nouns)}{random.randint(100, 999)}"
 
@@ -30,6 +31,244 @@ def clean_message(message):
         message = message[:500]
     return message.strip()
 
+
+from datetime import datetime
+import xml.etree.ElementTree as ET
+
+
+# Mevcut kodunuza eklenecek sitemap route'ları
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Dinamik sitemap.xml oluşturur"""
+    try:
+        # XML root element
+        urlset = ET.Element('urlset')
+        urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+
+        # Base URL - gerçek domain'inizle değiştirin
+        base_url = request.url_root.rstrip('/')
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+        # Ana sayfa
+        url = ET.SubElement(urlset, 'url')
+        ET.SubElement(url, 'loc').text = f'{base_url}/'
+        ET.SubElement(url, 'lastmod').text = current_date
+        ET.SubElement(url, 'changefreq').text = 'daily'
+        ET.SubElement(url, 'priority').text = '1.0'
+
+        # Chat sayfası
+        url = ET.SubElement(urlset, 'url')
+        ET.SubElement(url, 'loc').text = f'{base_url}/chat'
+        ET.SubElement(url, 'lastmod').text = current_date
+        ET.SubElement(url, 'changefreq').text = 'hourly'
+        ET.SubElement(url, 'priority').text = '0.8'
+
+        # Anime sayfaları (popüler animeler için)
+        if recommendation_system and recommendation_system.id_to_anime:
+            # İlk 100 anime'yi sitemap'e ekle (SEO için çok fazla URL eklemeyin)
+            anime_count = 0
+            for anime_id, anime_data in recommendation_system.id_to_anime.items():
+                if anime_count >= 100:  # Limit
+                    break
+
+                try:
+                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
+                        anime_data)
+                    # URL-safe anime adı oluştur
+                    safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
+
+                    url = ET.SubElement(urlset, 'url')
+                    ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
+                    ET.SubElement(url, 'lastmod').text = current_date
+                    ET.SubElement(url, 'changefreq').text = 'weekly'
+                    ET.SubElement(url, 'priority').text = '0.6'
+
+                    anime_count += 1
+                except:
+                    continue
+
+        # XML'i string'e çevir
+        xml_str = ET.tostring(urlset, encoding='unicode')
+
+        # XML declaration ekle
+        xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        full_xml = xml_declaration + xml_str
+
+        return Response(full_xml, mimetype='application/xml')
+
+    except Exception as e:
+        print(f"Sitemap generation error: {e}")
+        return Response(
+            '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
+            mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Robots.txt dosyası"""
+    robots_content = f"""User-agent: *
+Allow: /
+Allow: /chat
+
+Sitemap: {request.url_root.rstrip('/')}/sitemap.xml
+"""
+    return Response(robots_content, mimetype='text/plain')
+
+
+# Anime detay sayfası route'u (SEO için)
+@app.route('/anime/<int:anime_id>/<path:anime_name>')
+def anime_detail(anime_id, anime_name):
+    """Anime detay sayfası (SEO için)"""
+    if not recommendation_system or str(anime_id) not in recommendation_system.id_to_anime:
+        return render_template('error.html', error="Anime not found"), 404
+
+    anime_data = recommendation_system.id_to_anime[str(anime_id)]
+    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
+
+    # Anime bilgilerini al
+    image_url = recommendation_system.get_anime_image_url(anime_id)
+    mal_url = recommendation_system.get_anime_mal_url(anime_id)
+    genres = recommendation_system.get_anime_genres(anime_id)
+
+    # Benzer animeler öner
+    similar_animes = []
+    try:
+        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=6)
+        similar_animes = recommendations
+    except:
+        pass
+
+    anime_info = {
+        'id': anime_id,
+        'name': anime_name,
+        'image_url': image_url,
+        'mal_url': mal_url,
+        'genres': genres,
+        'similar_animes': similar_animes
+    }
+
+    return render_template('anime_detail.html', anime=anime_info)
+
+
+# JSON-LD structured data için helper fonksiyon
+def generate_anime_structured_data(anime_info):
+    """Anime için JSON-LD structured data oluşturur"""
+    structured_data = {
+        "@context": "https://schema.org",
+        "@type": "Movie",
+        "name": anime_info['name'],
+        "genre": anime_info['genres'],
+        "url": f"{request.url_root.rstrip('/')}/anime/{anime_info['id']}/{anime_info['name'].replace(' ', '-')}"
+    }
+
+    if anime_info['image_url']:
+        structured_data["image"] = anime_info['image_url']
+
+    if anime_info['mal_url']:
+        structured_data["sameAs"] = anime_info['mal_url']
+
+    return structured_data
+
+
+# Sitemap index (büyük siteler için)
+@app.route('/sitemap-index.xml')
+def sitemap_index():
+    """Sitemap index dosyası (büyük siteler için)"""
+    try:
+        sitemapindex = ET.Element('sitemapindex')
+        sitemapindex.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+
+        base_url = request.url_root.rstrip('/')
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+        # Ana sitemap
+        sitemap = ET.SubElement(sitemapindex, 'sitemap')
+        ET.SubElement(sitemap, 'loc').text = f'{base_url}/sitemap.xml'
+        ET.SubElement(sitemap, 'lastmod').text = current_date
+
+        # Anime sitemap (eğer çok fazla anime varsa)
+        if recommendation_system and len(recommendation_system.id_to_anime) > 100:
+            sitemap = ET.SubElement(sitemapindex, 'sitemap')
+            ET.SubElement(sitemap, 'loc').text = f'{base_url}/sitemap-animes.xml'
+            ET.SubElement(sitemap, 'lastmod').text = current_date
+
+        xml_str = ET.tostring(sitemapindex, encoding='unicode')
+        xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        full_xml = xml_declaration + xml_str
+
+        return Response(full_xml, mimetype='application/xml')
+
+    except Exception as e:
+        print(f"Sitemap index generation error: {e}")
+        return Response(
+            '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>',
+            mimetype='application/xml')
+
+
+@app.route('/sitemap-animes.xml')
+def sitemap_animes():
+    """Anime'lere özel sitemap"""
+    try:
+        urlset = ET.Element('urlset')
+        urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+
+        base_url = request.url_root.rstrip('/')
+        current_date = datetime.now().strftime('%Y-%m-%d')
+
+        if recommendation_system and recommendation_system.id_to_anime:
+            for anime_id, anime_data in recommendation_system.id_to_anime.items():
+                try:
+                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
+                        anime_data)
+                    safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
+
+                    url = ET.SubElement(urlset, 'url')
+                    ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
+                    ET.SubElement(url, 'lastmod').text = current_date
+                    ET.SubElement(url, 'changefreq').text = 'weekly'
+                    ET.SubElement(url, 'priority').text = '0.6'
+
+                except:
+                    continue
+
+        xml_str = ET.tostring(urlset, encoding='unicode')
+        xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        full_xml = xml_declaration + xml_str
+
+        return Response(full_xml, mimetype='application/xml')
+
+    except Exception as e:
+        print(f"Anime sitemap generation error: {e}")
+        return Response(
+            '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
+            mimetype='application/xml')
+
+
+# SEO meta tag'leri için helper fonksiyon
+def get_meta_tags(page_type, anime_info=None):
+    """Sayfa türüne göre meta tag'leri döndürür"""
+    meta_tags = {
+        'home': {
+            'title': 'Anime Recommendation System - Discover Your Next Favorite Anime',
+            'description': 'Get personalized anime recommendations based on your favorite shows. Discover new anime series and movies with our AI-powered recommendation system.',
+            'keywords': 'anime, recommendation, anime list, manga, otaku, anime series, anime movies'
+        },
+        'chat': {
+            'title': 'Anime Chat Room - Connect with Fellow Otaku',
+            'description': 'Join our anime chat room and connect with other anime fans. Discuss your favorite shows, get recommendations, and make new friends.',
+            'keywords': 'anime chat, otaku community, anime discussion, anime fans'
+        }
+    }
+
+    if page_type == 'anime' and anime_info:
+        return {
+            'title': f"{anime_info['name']} - Anime Details & Recommendations",
+            'description': f"Learn about {anime_info['name']} and discover similar anime. Get personalized recommendations based on this anime.",
+            'keywords': f"{anime_info['name']}, anime, {', '.join(anime_info['genres'])}, recommendations"
+        }
+
+    return meta_tags.get(page_type, meta_tags['home'])
 
 # Chat route'u (mevcut route'lardan sonra ekle)
 @app.route('/chat')
@@ -638,7 +877,7 @@ def main():
         print(f"Failed to initialize recommendation system: {e}")
         sys.exit(1)
 
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='192.168.1.47', port=5000)
 
 
 if __name__ == "__main__":
