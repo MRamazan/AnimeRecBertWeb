@@ -45,6 +45,7 @@ def sitemap():
         # XML root element
         urlset = ET.Element('urlset')
         urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+        urlset.set('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1')
 
         # Base URL - gerçek domain'inizle değiştirin
         base_url = request.url_root.rstrip('/')
@@ -73,10 +74,10 @@ def sitemap():
                     break
 
                 try:
-                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
-                        anime_data)
+                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
                     # URL-safe anime adı oluştur
                     safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
+                    safe_name = re.sub(r'[^\w\-]', '', safe_name)  # Sadece harf, rakam ve tire
 
                     url = ET.SubElement(urlset, 'url')
                     ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
@@ -84,8 +85,17 @@ def sitemap():
                     ET.SubElement(url, 'changefreq').text = 'weekly'
                     ET.SubElement(url, 'priority').text = '0.6'
 
+                    # Resim URL'si varsa ekle
+                    image_url = recommendation_system.get_anime_image_url(int(anime_id))
+                    if image_url:
+                        image_elem = ET.SubElement(url, 'image:image')
+                        ET.SubElement(image_elem, 'image:loc').text = image_url
+                        ET.SubElement(image_elem, 'image:title').text = anime_name
+                        ET.SubElement(image_elem, 'image:caption').text = f'Poster image for {anime_name}'
+
                     anime_count += 1
-                except:
+                except Exception as e:
+                    print(f"Error processing anime {anime_id}: {e}")
                     continue
 
         # XML'i string'e çevir
@@ -104,6 +114,10 @@ def sitemap():
             mimetype='application/xml')
 
 
+
+
+
+
 @app.route('/robots.txt')
 def robots_txt():
     """Robots.txt dosyası"""
@@ -116,7 +130,6 @@ Sitemap: {request.url_root.rstrip('/')}/sitemap.xml
     return Response(robots_content, mimetype='text/plain')
 
 
-# Anime detay sayfası route'u (SEO için)
 @app.route('/anime/<int:anime_id>/<path:anime_name>')
 def anime_detail(anime_id, anime_name):
     """Anime detay sayfası (SEO için)"""
@@ -148,7 +161,10 @@ def anime_detail(anime_id, anime_name):
         'similar_animes': similar_animes
     }
 
-    return render_template('anime_detail.html', anime=anime_info)
+    # JSON-LD structured data oluştur
+    structured_data = generate_anime_structured_data(anime_info)
+
+    return render_template('anime_detail.html', anime=anime_info, structured_data=json.dumps(structured_data))
 
 
 # JSON-LD structured data için helper fonksiyon
@@ -158,9 +174,11 @@ def generate_anime_structured_data(anime_info):
         "@context": "https://schema.org",
         "@type": "Movie",
         "name": anime_info['name'],
-        "genre": anime_info['genres'],
         "url": f"{request.url_root.rstrip('/')}/anime/{anime_info['id']}/{anime_info['name'].replace(' ', '-')}"
     }
+
+    if anime_info['genres']:
+        structured_data["genre"] = anime_info['genres']
 
     if anime_info['image_url']:
         structured_data["image"] = anime_info['image_url']
@@ -169,7 +187,6 @@ def generate_anime_structured_data(anime_info):
         structured_data["sameAs"] = anime_info['mal_url']
 
     return structured_data
-
 
 # Sitemap index (büyük siteler için)
 @app.route('/sitemap-index.xml')
@@ -212,6 +229,7 @@ def sitemap_animes():
     try:
         urlset = ET.Element('urlset')
         urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+        urlset.set('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1')
 
         base_url = request.url_root.rstrip('/')
         current_date = datetime.now().strftime('%Y-%m-%d')
@@ -219,9 +237,9 @@ def sitemap_animes():
         if recommendation_system and recommendation_system.id_to_anime:
             for anime_id, anime_data in recommendation_system.id_to_anime.items():
                 try:
-                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
-                        anime_data)
+                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
                     safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
+                    safe_name = re.sub(r'[^\w\-]', '', safe_name)
 
                     url = ET.SubElement(urlset, 'url')
                     ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
@@ -229,7 +247,16 @@ def sitemap_animes():
                     ET.SubElement(url, 'changefreq').text = 'weekly'
                     ET.SubElement(url, 'priority').text = '0.6'
 
-                except:
+                    # Resim URL'si varsa ekle
+                    image_url = recommendation_system.get_anime_image_url(int(anime_id))
+                    if image_url:
+                        image_elem = ET.SubElement(url, 'image:image')
+                        ET.SubElement(image_elem, 'image:loc').text = image_url
+                        ET.SubElement(image_elem, 'image:title').text = anime_name
+                        ET.SubElement(image_elem, 'image:caption').text = f'Poster image for {anime_name}'
+
+                except Exception as e:
+                    print(f"Error processing anime {anime_id}: {e}")
                     continue
 
         xml_str = ET.tostring(urlset, encoding='unicode')
@@ -243,6 +270,7 @@ def sitemap_animes():
         return Response(
             '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
             mimetype='application/xml')
+
 
 
 # SEO meta tag'leri için helper fonksiyon
@@ -877,7 +905,7 @@ def main():
         print(f"Failed to initialize recommendation system: {e}")
         sys.exit(1)
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='192.168.1.47', port=5000)
 
 
 if __name__ == "__main__":
