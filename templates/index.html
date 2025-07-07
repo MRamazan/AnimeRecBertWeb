@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='greentheme.css') }}" id="theme-green" disabled>
     <link rel="stylesheet" href="{{ url_for('static', filename='orangetheme.css') }}" id="theme-orange" disabled>
     <link rel="stylesheet" href="{{ url_for('static', filename='purpletheme.css') }}" id="theme-purple">
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.google-analytics.com">
 
     <style>
         /* Critical CSS - Sayfa yükleme sırasında görünümü engellemek için */
@@ -1078,12 +1080,8 @@ function closeBlacklistModal() {
     document.getElementById('blacklistModal').classList.remove('show');
 }
     </script>
-    <!-- Google Analytics - Optimize edilmiş versiyon -->
-<!-- 1. Preconnect DNS optimizasyonu için head'e eklenebilir -->
-<link rel="preconnect" href="https://www.googletagmanager.com">
-<link rel="preconnect" href="https://www.google-analytics.com">
 
-<!-- 2. Body sonundaki mevcut kod (zaten doğru) -->
+
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-THGPD4P709"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
