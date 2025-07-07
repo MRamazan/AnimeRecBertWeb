@@ -1078,13 +1078,54 @@ function closeBlacklistModal() {
     document.getElementById('blacklistModal').classList.remove('show');
 }
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-THGPD4P709"></script>
+    <!-- Google Analytics - Optimize edilmiş versiyon -->
+<!-- 1. Preconnect DNS optimizasyonu için head'e eklenebilir -->
+<link rel="preconnect" href="https://www.googletagmanager.com">
+<link rel="preconnect" href="https://www.google-analytics.com">
+
+<!-- 2. Body sonundaki mevcut kod (zaten doğru) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-THGPD4P709"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-THGPD4P709');
+  // Ek konfigürasyonlar eklenebilir
+  gtag('config', 'G-THGPD4P709', {
+    // Cookie consent için (isteğe bağlı)
+    'anonymize_ip': true,
+    // Sayfa yükleme performansı ölçümü
+    'send_page_view': true,
+    // Custom events tanımlanabilir
+    'custom_map': {
+      'custom_parameter': 'dimension1'
+    }
+  });
+
+  // Özel event'ler için örnek fonksiyonlar
+  function trackAnimeRecommendation(animeName) {
+    gtag('event', 'anime_recommendation', {
+      'anime_name': animeName,
+      'event_category': 'recommendation',
+      'event_label': animeName
+    });
+  }
+
+  function trackFavoriteAdd(animeName) {
+    gtag('event', 'favorite_added', {
+      'anime_name': animeName,
+      'event_category': 'user_interaction',
+      'event_label': animeName
+    });
+  }
+
+  function trackThemeChange(themeName) {
+    gtag('event', 'theme_changed', {
+      'theme_name': themeName,
+      'event_category': 'ui_customization',
+      'event_label': themeName
+    });
+  }
 </script>
 
 </body>
