@@ -143,11 +143,12 @@ def anime_detail(anime_id, anime_name):
     image_url = recommendation_system.get_anime_image_url(anime_id)
     mal_url = recommendation_system.get_anime_mal_url(anime_id)
     genres = recommendation_system.get_anime_genres(anime_id)
+    type = recommendation_system.get_type(anime_id)
 
     # Benzer animeler öner
     similar_animes = []
     try:
-        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=7)
+        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=10)
         similar_animes = recommendations
     except:
         pass
@@ -158,7 +159,8 @@ def anime_detail(anime_id, anime_name):
         'image_url': image_url,
         'mal_url': mal_url,
         'genres': genres,
-        'similar_animes': similar_animes
+        'similar_animes': similar_animes,
+        'type': type
     }
 
     # JSON-LD structured data oluştur
@@ -172,7 +174,7 @@ def generate_anime_structured_data(anime_info):
     """Anime için JSON-LD structured data oluşturur"""
     structured_data = {
         "@context": "https://schema.org",
-        "@type": "Movie",
+        "@type": anime_info['type'],
         "name": anime_info['name'],
         "url": f"{request.url_root.rstrip('/')}/anime/{anime_info['id']}/{anime_info['name'].replace(' ', '-')}"
     }
@@ -535,7 +537,14 @@ class AnimeRecommendationSystem:
         type_seq_info = self.id_to_type_seq.get(str(anime_id))
         if not type_seq_info or len(type_seq_info) < 3:
             return False
-        return type_seq_info[2]  # is_hentai
+        return type_seq_info[2]
+
+    def _get_type(self, anime_id):
+        """Anime'nin hentai olup olmadığını kontrol eder"""
+        type_seq_info = self.id_to_type_seq.get(str(anime_id))
+        if not type_seq_info or len(type_seq_info) < 3:
+            return False
+        return type_seq_info[1]
 
     def get_recommendations(self, favorite_anime_ids, num_recommendations=40, filters=None):
         try:
