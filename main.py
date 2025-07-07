@@ -147,7 +147,7 @@ def anime_detail(anime_id, anime_name):
     # Benzer animeler öner
     similar_animes = []
     try:
-        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=6)
+        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=7)
         similar_animes = recommendations
     except:
         pass
