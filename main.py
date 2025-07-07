@@ -9,7 +9,6 @@ from datetime import datetime
 import random
 import re
 from flask import Flask, render_template, request, jsonify, session, Response
-from slugify import slugify
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
@@ -77,7 +76,8 @@ def sitemap():
                 try:
                     anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
                     # URL-safe anime adı oluştur
-                    safe_name = slugify(anime_name)
+                    safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
+                    safe_name = re.sub(r'[^\w\-]', '', safe_name)  # Sadece harf, rakam ve tire
 
                     url = ET.SubElement(urlset, 'url')
                     ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
@@ -143,6 +143,7 @@ def anime_detail(anime_id, anime_name):
     image_url = recommendation_system.get_anime_image_url(anime_id)
     mal_url = recommendation_system.get_anime_mal_url(anime_id)
     genres = recommendation_system.get_anime_genres(anime_id)
+    type = recommendation_system._get_type(anime_id)
 
     # Benzer animeler öner
     similar_animes = []
@@ -159,7 +160,7 @@ def anime_detail(anime_id, anime_name):
         'mal_url': mal_url,
         'genres': genres,
         'similar_animes': similar_animes,
-   
+        'type': type
     }
 
     # JSON-LD structured data oluştur
@@ -173,7 +174,7 @@ def generate_anime_structured_data(anime_info):
     """Anime için JSON-LD structured data oluşturur"""
     structured_data = {
         "@context": "https://schema.org",
-        "@type": "Anime",
+        "@type": anime_info["type"],
         "name": anime_info['name'],
         "url": f"{request.url_root.rstrip('/')}/anime/{anime_info['id']}/{anime_info['name'].replace(' ', '-')}"
     }
@@ -279,9 +280,9 @@ def get_meta_tags(page_type, anime_info=None):
     """Sayfa türüne göre meta tag'leri döndürür"""
     meta_tags = {
         'home': {
-            'title': 'Anime Recommendation System - Discover Your Next Favorite Anime',
+            'title': 'Anime Recommendation System - Discover Your Next Favorite Anime with BERT Transformer',
             'description': 'Get personalized anime recommendations based on your favorite shows. Discover new anime series and movies with our AI-powered recommendation system.',
-            'keywords': 'anime, recommendation, anime list, manga, otaku, anime series, anime movies'
+            'keywords': 'anime, recommendation, anime list, manga, otaku, anime series, anime movies, ai, ai anime recommendation'
         },
         'chat': {
             'title': 'Anime Chat Room - Connect with Fellow Otaku',
@@ -298,6 +299,7 @@ def get_meta_tags(page_type, anime_info=None):
         }
 
     return meta_tags.get(page_type, meta_tags['home'])
+
 
 # Chat route'u (mevcut route'lardan sonra ekle)
 @app.route('/chat')
