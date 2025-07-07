@@ -37,6 +37,44 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
+        
+        /* Ana sayfa butonu */
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .home-button:hover {
+            background: linear-gradient(135deg, #0056b3, #003d82);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        .home-button:active {
+            transform: translateY(0);
+        }
+        
+        /* Home icon */
+        .home-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -44,6 +82,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 60px; /* Home butonu için alan bırakıyoruz */
         }
         .anime-header {
             display: flex;
@@ -140,6 +179,18 @@
             margin-bottom: 10px;
         }
         @media (max-width: 768px) {
+            .home-button {
+                top: 10px;
+                left: 10px;
+                padding: 10px 16px;
+                font-size: 0.8em;
+            }
+            
+            .container {
+                margin-top: 80px;
+                padding: 15px;
+            }
+            
             .anime-header {
                 flex-direction: column;
                 text-align: center;
@@ -155,6 +206,14 @@
     </style>
 </head>
 <body>
+    <!-- Ana sayfa butonu -->
+    <a href="https://www.animerecbert.online" class="home-button">
+        <svg class="home-icon" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        AnimeRecBert
+    </a>
+
     <div class="container">
         <div class="anime-header">
             <div class="anime-image">
