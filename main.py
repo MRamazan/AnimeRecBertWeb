@@ -9,6 +9,7 @@ from datetime import datetime
 import random
 import re
 from flask import Flask, render_template, request, jsonify, session, Response
+from slugify import slugify
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
@@ -76,8 +77,7 @@ def sitemap():
                 try:
                     anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
                     # URL-safe anime adı oluştur
-                    safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
-                    safe_name = re.sub(r'[^\w\-]', '', safe_name)  # Sadece harf, rakam ve tire
+                    safe_name = slugify(anime_name)
 
                     url = ET.SubElement(urlset, 'url')
                     ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
