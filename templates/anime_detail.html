@@ -1,0 +1,16 @@
+<!-- templates/anime_detail.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ anime.name }} - Anime Details</title>
+    <meta name="description" content="Details about {{ anime.name }}">
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+        {{ structured_data|safe }}
+    </script>
+</head>
+<body>
+    <h1>{{ anime.name }}</h1>
+    <!-- Anime detayları -->
+</body>
+</html>
