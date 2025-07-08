@@ -8,3 +8,5 @@ numpy==1.26.4
 tb-nightly==2.19.0a20241221
 tqdm==4.67.1
 flask_socketio
+gunicorn
+
