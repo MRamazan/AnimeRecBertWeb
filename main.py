@@ -35,7 +35,63 @@ def clean_message(message):
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
+def main():
+    global recommendation_system
+    
+    args.num_items = 12689
+    
+    import gdown
+    import os
+    
+    file_ids = {
+        "1C6mdjblhiWGhRgbIk5DP2XCc4ElS9x8p": "pretrained_bert.pth",
+        "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
+        "1s-8FM1Wi2wOWJ9cstvm-O1_6XculTcTG": "dataset.pkl",
+        "1SOm1llcTKfhr-RTHC0dhaZ4AfWPs8wRx": "id_to_url.json",
+        "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json",
+        "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json",
+        "1G9O_ahyuJ5aO0cwoVnIXrlzMqjKrf2aw": "id_to_genres.json"
+    }
+    
+    def download_from_gdrive(file_id, output_path):
+        url = f"https://drive.google.com/uc?id={file_id}"
+        try:
+            print(f"Downloading: {output_path}")
+            gdown.download(url, output_path, quiet=False)
+            print(f"Downloaded: {output_path}")
+            return True
+        except Exception as e:
+            print(f"Error downloading {output_path}: {e}")
+            return False
+    
+    # Dosyaları kontrol et ve indir
+    for file_id, filename in file_ids.items():
+        if not os.path.exists(filename):
+            print(f"File {filename} not found, downloading...")
+            if not download_from_gdrive(file_id, filename):
+                print(f"Failed to download {filename}")
+                return  # Uygulama başlatma
+        else:
+            print(f"File {filename} already exists")
+    
+    try:
+        print("Initializing recommendation system...")
+        recommendation_system = AnimeRecommendationSystem(
+            "pretrained_bert.pth",
+            "dataset.pkl", 
+            "animes.json",
+            "id_to_url.json",
+            "anime_to_malurl.json",
+            "anime_to_typenseq.json",
+            "id_to_genres.json"
+        )
+        print("Recommendation system initialized successfully!")
+    except Exception as e:
+        print(f"Failed to initialize recommendation system: {e}")
+        # Hata durumunda da uygulamayı başlat (sadece hata sayfası gösterir)
+        pass
 
+main()
 # Mevcut kodunuza eklenecek sitemap route'ları
 
 @app.route('/sitemap.xml')
@@ -866,65 +922,8 @@ def get_mal_logo():
     })
 
 
-def main():
-    global recommendation_system
     
-    args.num_items = 12689
-    
-    import gdown
-    import os
-    
-    file_ids = {
-        "1C6mdjblhiWGhRgbIk5DP2XCc4ElS9x8p": "pretrained_bert.pth",
-        "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
-        "1s-8FM1Wi2wOWJ9cstvm-O1_6XculTcTG": "dataset.pkl",
-        "1SOm1llcTKfhr-RTHC0dhaZ4AfWPs8wRx": "id_to_url.json",
-        "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json",
-        "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json",
-        "1G9O_ahyuJ5aO0cwoVnIXrlzMqjKrf2aw": "id_to_genres.json"
-    }
-    
-    def download_from_gdrive(file_id, output_path):
-        url = f"https://drive.google.com/uc?id={file_id}"
-        try:
-            print(f"Downloading: {output_path}")
-            gdown.download(url, output_path, quiet=False)
-            print(f"Downloaded: {output_path}")
-            return True
-        except Exception as e:
-            print(f"Error downloading {output_path}: {e}")
-            return False
-    
-    # Dosyaları kontrol et ve indir
-    for file_id, filename in file_ids.items():
-        if not os.path.exists(filename):
-            print(f"File {filename} not found, downloading...")
-            if not download_from_gdrive(file_id, filename):
-                print(f"Failed to download {filename}")
-                return  # Uygulama başlatma
-        else:
-            print(f"File {filename} already exists")
-    
-    try:
-        print("Initializing recommendation system...")
-        recommendation_system = AnimeRecommendationSystem(
-            "pretrained_bert.pth",
-            "dataset.pkl", 
-            "animes.json",
-            "id_to_url.json",
-            "anime_to_malurl.json",
-            "anime_to_typenseq.json",
-            "id_to_genres.json"
-        )
-        print("Recommendation system initialized successfully!")
-    except Exception as e:
-        print(f"Failed to initialize recommendation system: {e}")
-        # Hata durumunda da uygulamayı başlat (sadece hata sayfası gösterir)
-        pass
-    
-    # Render.com için port ayarı
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
 
 if __name__ == "__main__":
-    main()
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
