@@ -121,5 +121,5 @@ parser.add_argument('--experiment_description', type=str, default='test')
 
 
 ################
-args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 set_template(args)
