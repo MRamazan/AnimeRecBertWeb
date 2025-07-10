@@ -375,7 +375,7 @@ class AnimeRecommendationSystem:
         self.id_to_genres = LazyDict(genres_path)
         
         # Cache için weak reference kullan
-        self._cache = weakref.WeakValueDictionary()
+        self._cache = {}
         
         self.load_model_and_data()
 
