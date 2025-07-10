@@ -687,7 +687,7 @@ def main():
         sys.exit(1)
     
     # Sunucuyu başlat
-    socketio.run(app, debug=False, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=False, host='0.0.0.0', port=5000,allow_unsafe_werkzeug=True)
 
 if __name__ == "__main__":
     main()
