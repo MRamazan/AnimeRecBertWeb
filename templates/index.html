@@ -434,8 +434,7 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize page loading
-            checkSystemStatus();
-            setInterval(checkSystemStatus, 30000);
+
             initializePage();
             preloadCriticalResources();
             loadBlacklist();
@@ -1081,143 +1080,7 @@ function openBlacklistModal() {
 function closeBlacklistModal() {
     document.getElementById('blacklistModal').classList.remove('show');
 }
-        function checkSystemStatus() {
-    return fetch('/api/system_status')
-        .then(response => response.json())
-        .then(data => {
-            if (data.loading) {
-                showLoadingMessage('System is loading, please wait...');
-                return false;
-            } else if (data.error) {
-                showErrorMessage('System error: ' + data.error);
-                return false;
-            } else if (data.ready) {
-                hideLoadingMessage();
-                return true;
-            }
-            return false;
-        })
-        .catch(error => {
-            console.error('Error checking system status:', error);
-            showErrorMessage('Connection error. Please try again.');
-            return false;
-        });
-}
-
-// Loading mesajı gösterme
-function showLoadingMessage(message) {
-    let loadingDiv = document.getElementById('system-loading');
-    if (!loadingDiv) {
-        loadingDiv = document.createElement('div');
-        loadingDiv.id = 'system-loading';
-        loadingDiv.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            text-align: center;
-            padding: 10px;
-            z-index: 9999;
-            font-size: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        `;
-        document.body.appendChild(loadingDiv);
-    }
-    loadingDiv.textContent = message;
-    loadingDiv.style.display = 'block';
-}
-
-// Error mesajı gösterme
-function showErrorMessage(message) {
-    let errorDiv = document.getElementById('system-error');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'system-error';
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            text-align: center;
-            padding: 10px;
-            z-index: 9999;
-            font-size: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        `;
-        document.body.appendChild(errorDiv);
-    }
-    errorDiv.innerHTML = message + ' <button onclick="location.reload()" style="margin-left: 10px; padding: 5px 10px; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 3px; cursor: pointer;">Retry</button>';
-    errorDiv.style.display = 'block';
-}
-
-// Loading mesajı gizleme
-function hideLoadingMessage() {
-    const loadingDiv = document.getElementById('system-loading');
-    const errorDiv = document.getElementById('system-error');
-    if (loadingDiv) loadingDiv.style.display = 'none';
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-// API çağrılarını wrapper ile sarın
-function makeAPICall(url, options = {}) {
-    return checkSystemStatus().then(isReady => {
-        if (!isReady) {
-            return Promise.reject(new Error('System not ready'));
-        }
         
-        return fetch(url, options)
-            .then(response => response.json())
-            .then(data => {
-                if (data.loading) {
-                    showLoadingMessage('System is still loading, please wait...');
-                    return Promise.reject(new Error('System loading'));
-                } else if (data.error) {
-                    showErrorMessage('System error: ' + data.message);
-                    return Promise.reject(new Error(data.message));
-                }
-                return data;
-            });
-    });
-}
-
-// Örnek kullanım - mevcut API çağrılarınızı güncelleyin:
-
-// Anime arama fonksiyonu güncelleme
-function searchAnimes(query) {
-    return makeAPICall(`/api/search_animes?q=${encodeURIComponent(query)}`);
-}
-
-// Favori ekleme fonksiyonu güncelleme
-function addToFavorites(animeId, animeName) {
-    return makeAPICall('/api/add_favorite', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            anime_id: animeId,
-            anime_name: animeName
-        })
-    });
-}
-
-// Öneri alma fonksiyonu güncelleme
-function getRecommendations(filters = {}, blacklistedAnimes = []) {
-    return makeAPICall('/api/get_recommendations', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            filters: filters,
-            blacklisted_animes: blacklistedAnimes
-        })
-    });
-}
     </script>
 
 
