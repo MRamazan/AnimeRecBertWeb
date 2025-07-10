@@ -14,10 +14,6 @@ app = Flask(__name__)
 app.secret_key = '1903bjk'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-recommendation_system = None
-system_loading = True
-system_error = None
-
 chat_messages = []
 active_users = {}
 MAX_MESSAGES = 300
@@ -735,100 +731,16 @@ class AnimeRecommendationSystem:
                 return False
 
         return True
-def initialize_system():
-    global recommendation_system, system_loading, system_error
-    
-    try:
-        print("Starting system initialization...")
-        
-        # Gerekli dosyaları tanımla
-        file_ids = {
-            "1C6mdjblhiWGhRgbIk5DP2XCc4ElS9x8p": "pretrained_bert.pth",
-            "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
-            "1s-8FM1Wi2wOWJ9cstvm-O1_6XculTcTG": "dataset.pkl",
-            "1SOm1llcTKfhr-RTHC0dhaZ4AfWPs8wRx": "id_to_url.json",
-            "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json",
-            "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json",
-            "1G9O_ahyuJ5aO0cwoVnIXrlzMqjKrf2aw": "id_to_genres.json"
-        }
-        
-        # Dosyaları kontrol et ve indir
-        for file_id, filename in file_ids.items():
-            if not os.path.exists(filename):
-                print(f"File {filename} not found, downloading...")
-                if not download_from_gdrive(file_id, filename):
-                    raise Exception(f"Failed to download {filename}")
-            else:
-                print(f"File {filename} already exists")
-        
-        # Model ve veri yükleme
-        args.num_items = 12689
-        print("Initializing recommendation system...")
-        
-        recommendation_system = AnimeRecommendationSystem(
-            "pretrained_bert.pth",
-            "dataset.pkl", 
-            "animes.json",
-            "id_to_url.json",
-            "anime_to_malurl.json",
-            "anime_to_typenseq.json",
-            "id_to_genres.json"
-        )
-        
-        system_loading = False
-        system_error = None
-        print("Recommendation system initialized successfully!")
-        
-    except Exception as e:
-        print(f"Failed to initialize recommendation system: {e}")
-        system_loading = False
-        system_error = str(e)
 
-# Sistem durumunu kontrol eden decorator
-def check_system_ready():
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            global system_loading, system_error, recommendation_system
-            
-            if system_loading:
-                return jsonify({
-                    'success': False, 
-                    'loading': True,
-                    'message': 'System is still loading, please wait...'
-                })
-            
-            if system_error:
-                return jsonify({
-                    'success': False, 
-                    'error': True,
-                    'message': f'System error: {system_error}'
-                })
-            
-            if recommendation_system is None:
-                return jsonify({
-                    'success': False, 
-                    'error': True,
-                    'message': 'Recommendation system not available'
-                })
-            
-            return f(*args, **kwargs)
-        wrapper.__name__ = f.__name__
-        return wrapper
-    return decorator
 
-# Routes
+recommendation_system = None
+
+
 @app.route('/')
 def index():
-    if system_loading:
-        return render_template('loading.html')
-    
-    if system_error:
-        return render_template('error.html', 
-                             error=f"System initialization failed: {system_error}")
-    
     if recommendation_system is None:
         return render_template('error.html', 
-                             error="Recommendation system is not available")
+                             error="Recommendation system is loading... Please wait and refresh the page.")
     
     try:
         animes = recommendation_system.get_all_animes()
@@ -836,14 +748,6 @@ def index():
     except Exception as e:
         return render_template('error.html', 
                              error=f"Error loading animes: {str(e)}")
-
-@app.route('/api/system_status')
-def system_status():
-    return jsonify({
-        'loading': system_loading,
-        'error': system_error,
-        'ready': recommendation_system is not None
-    })
 
 
 @app.route('/api/search_animes')
@@ -962,15 +866,65 @@ def get_mal_logo():
     })
 
 
-def start_system():
-    # Arka planda sistem yükleme
-    init_thread = threading.Thread(target=initialize_system)
-    init_thread.daemon = True
-    init_thread.start()
+def main():
+    global recommendation_system
     
-    # Flask uygulamasını başlat
+    args.num_items = 12689
+    
+    import gdown
+    import os
+    
+    file_ids = {
+        "1C6mdjblhiWGhRgbIk5DP2XCc4ElS9x8p": "pretrained_bert.pth",
+        "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
+        "1s-8FM1Wi2wOWJ9cstvm-O1_6XculTcTG": "dataset.pkl",
+        "1SOm1llcTKfhr-RTHC0dhaZ4AfWPs8wRx": "id_to_url.json",
+        "1vwJEMEOIYwvCKCCbbeaP0U_9L3NhvBzg": "anime_to_malurl.json",
+        "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json",
+        "1G9O_ahyuJ5aO0cwoVnIXrlzMqjKrf2aw": "id_to_genres.json"
+    }
+    
+    def download_from_gdrive(file_id, output_path):
+        url = f"https://drive.google.com/uc?id={file_id}"
+        try:
+            print(f"Downloading: {output_path}")
+            gdown.download(url, output_path, quiet=False)
+            print(f"Downloaded: {output_path}")
+            return True
+        except Exception as e:
+            print(f"Error downloading {output_path}: {e}")
+            return False
+    
+    # Dosyaları kontrol et ve indir
+    for file_id, filename in file_ids.items():
+        if not os.path.exists(filename):
+            print(f"File {filename} not found, downloading...")
+            if not download_from_gdrive(file_id, filename):
+                print(f"Failed to download {filename}")
+                return  # Uygulama başlatma
+        else:
+            print(f"File {filename} already exists")
+    
+    try:
+        print("Initializing recommendation system...")
+        recommendation_system = AnimeRecommendationSystem(
+            "pretrained_bert.pth",
+            "dataset.pkl", 
+            "animes.json",
+            "id_to_url.json",
+            "anime_to_malurl.json",
+            "anime_to_typenseq.json",
+            "id_to_genres.json"
+        )
+        print("Recommendation system initialized successfully!")
+    except Exception as e:
+        print(f"Failed to initialize recommendation system: {e}")
+        # Hata durumunda da uygulamayı başlat (sadece hata sayfası gösterir)
+        pass
+    
+    # Render.com için port ayarı
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
 
 if __name__ == "__main__":
-    start_system()
+    main()
