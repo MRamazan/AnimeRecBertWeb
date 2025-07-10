@@ -1,22 +1,59 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, Response
 import sys
 import pickle
+import json
+import gc
+import weakref
+from pathlib import Path
 from utils import *
 from options import args
 from models import model_factory
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit
 from datetime import datetime
 import random
 import re
-from flask import Flask, render_template, request, jsonify, session, Response
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-chat_messages = []
-active_users = {}
-MAX_MESSAGES = 300
+# Memory-efficient chat system
+class ChatManager:
+    def __init__(self, max_messages=100):  # Reduced from 300
+        self.messages = []
+        self.active_users = {}
+        self.max_messages = max_messages
+    
+    def add_message(self, message):
+        self.messages.append(message)
+        if len(self.messages) > self.max_messages:
+            self.messages.pop(0)
+    
+    def get_messages(self):
+        return self.messages
+    
+    def add_user(self, sid, username):
+        self.active_users[sid] = {
+            'username': username,
+            'connected_at': datetime.now()
+        }
+    
+    def remove_user(self, sid):
+        return self.active_users.pop(sid, None)
+    
+    def get_user_count(self):
+        return len(self.active_users)
+    
+    def get_username(self, sid):
+        user = self.active_users.get(sid)
+        return user['username'] if user else None
+    
+    def update_username(self, sid, new_username):
+        if sid in self.active_users:
+            self.active_users[sid]['username'] = new_username
+
+chat_manager = ChatManager()
 
 def generate_username():
     adjectives = ['Cool', 'Awesome', 'Swift', 'Bright', 'Happy', 'Smart', 'Kind', 'Brave', 'Calm', 'Epic', "Black"]
@@ -31,13 +68,45 @@ def clean_message(message):
         message = message[:500]
     return message.strip()
 
+# Lazy loading için wrapper class
+class LazyDict:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self._data = None
+        self._loaded = False
+    
+    def _load_data(self):
+        if not self._loaded:
+            try:
+                with open(self.file_path, "r", encoding="utf-8") as file:
+                    self._data = json.load(file)
+                self._loaded = True
+            except Exception as e:
+                print(f"Warning: Could not load {self.file_path}: {str(e)}")
+                self._data = {}
+                self._loaded = True
+    
+    def get(self, key, default=None):
+        self._load_data()
+        return self._data.get(key, default)
+    
+    def __contains__(self, key):
+        self._load_data()
+        return key in self._data
+    
+    def items(self):
+        self._load_data()
+        return self._data.items()
+    
+    def keys(self):
+        self._load_data()
+        return self._data.keys()
+    
+    def __len__(self):
+        self._load_data()
+        return len(self._data)
 
-from datetime import datetime
-import xml.etree.ElementTree as ET
-
-
-# Mevcut kodunuza eklenecek sitemap route'ları
-
+# Sitemap route'ları
 @app.route('/sitemap.xml')
 def sitemap():
     """Dinamik sitemap.xml oluşturur"""
@@ -47,7 +116,7 @@ def sitemap():
         urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
         urlset.set('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1')
 
-        # Base URL - gerçek domain'inizle değiştirin
+        # Base URL
         base_url = request.url_root.rstrip('/')
         current_date = datetime.now().strftime('%Y-%m-%d')
 
@@ -65,19 +134,17 @@ def sitemap():
         ET.SubElement(url, 'changefreq').text = 'hourly'
         ET.SubElement(url, 'priority').text = '0.8'
 
-        # Anime sayfaları (popüler animeler için)
+        # Anime sayfaları (sadece ilk 50 anime - SEO için)
         if recommendation_system and recommendation_system.id_to_anime:
-            # İlk 100 anime'yi sitemap'e ekle (SEO için çok fazla URL eklemeyin)
             anime_count = 0
             for anime_id, anime_data in recommendation_system.id_to_anime.items():
-                if anime_count >= 100:  # Limit
+                if anime_count >= 50:  # Reduced from 100
                     break
 
                 try:
                     anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
-                    # URL-safe anime adı oluştur
                     safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
-                    safe_name = re.sub(r'[^\w\-]', '', safe_name)  # Sadece harf, rakam ve tire
+                    safe_name = re.sub(r'[^\w\-]', '', safe_name)
 
                     url = ET.SubElement(urlset, 'url')
                     ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
@@ -85,13 +152,14 @@ def sitemap():
                     ET.SubElement(url, 'changefreq').text = 'weekly'
                     ET.SubElement(url, 'priority').text = '0.6'
 
-                    # Resim URL'si varsa ekle
-                    image_url = recommendation_system.get_anime_image_url(int(anime_id))
-                    if image_url:
-                        image_elem = ET.SubElement(url, 'image:image')
-                        ET.SubElement(image_elem, 'image:loc').text = image_url
-                        ET.SubElement(image_elem, 'image:title').text = anime_name
-                        ET.SubElement(image_elem, 'image:caption').text = f'Poster image for {anime_name}'
+                    # Sadece gerekli durumlarda resim URL'si ekle
+                    if anime_count < 20:  # Sadece ilk 20 anime için resim
+                        image_url = recommendation_system.get_anime_image_url(int(anime_id))
+                        if image_url:
+                            image_elem = ET.SubElement(url, 'image:image')
+                            ET.SubElement(image_elem, 'image:loc').text = image_url
+                            ET.SubElement(image_elem, 'image:title').text = anime_name
+                            ET.SubElement(image_elem, 'image:caption').text = f'Poster image for {anime_name}'
 
                     anime_count += 1
                 except Exception as e:
@@ -100,8 +168,6 @@ def sitemap():
 
         # XML'i string'e çevir
         xml_str = ET.tostring(urlset, encoding='unicode')
-
-        # XML declaration ekle
         xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
         full_xml = xml_declaration + xml_str
 
@@ -112,11 +178,6 @@ def sitemap():
         return Response(
             '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
             mimetype='application/xml')
-
-
-
-
-
 
 @app.route('/robots.txt')
 def robots_txt():
@@ -129,26 +190,25 @@ Sitemap: {request.url_root.rstrip('/')}/sitemap.xml
 """
     return Response(robots_content, mimetype='text/plain')
 
-
 @app.route('/anime/<int:anime_id>/<path:anime_name>')
 def anime_detail(anime_id, anime_name):
     """Anime detay sayfası (SEO için)"""
     if not recommendation_system or str(anime_id) not in recommendation_system.id_to_anime:
         return render_template('error.html', error="Anime not found"), 404
 
-    anime_data = recommendation_system.id_to_anime[str(anime_id)]
+    anime_data = recommendation_system.id_to_anime.get(str(anime_id))
     anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
 
-    # Anime bilgilerini al
+    # Anime bilgilerini lazy loading ile al
     image_url = recommendation_system.get_anime_image_url(anime_id)
     mal_url = recommendation_system.get_anime_mal_url(anime_id)
     genres = recommendation_system.get_anime_genres(anime_id)
-    type = recommendation_system._get_type(anime_id)
+    anime_type = recommendation_system._get_type(anime_id)
 
-    # Benzer animeler öner
+    # Benzer animeler öner (sadece 5 tane)
     similar_animes = []
     try:
-        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=7)
+        recommendations, _, _ = recommendation_system.get_recommendations([anime_id], num_recommendations=5)
         similar_animes = recommendations
     except:
         pass
@@ -160,7 +220,7 @@ def anime_detail(anime_id, anime_name):
         'mal_url': mal_url,
         'genres': genres,
         'similar_animes': similar_animes,
-        'type': type
+        'type': anime_type
     }
 
     # JSON-LD structured data oluştur
@@ -168,8 +228,6 @@ def anime_detail(anime_id, anime_name):
 
     return render_template('anime_detail.html', anime=anime_info, structured_data=json.dumps(structured_data))
 
-
-# JSON-LD structured data için helper fonksiyon
 def generate_anime_structured_data(anime_info):
     """Anime için JSON-LD structured data oluşturur"""
     structured_data = {
@@ -190,10 +248,9 @@ def generate_anime_structured_data(anime_info):
 
     return structured_data
 
-# Sitemap index (büyük siteler için)
 @app.route('/sitemap-index.xml')
 def sitemap_index():
-    """Sitemap index dosyası (büyük siteler için)"""
+    """Sitemap index dosyası"""
     try:
         sitemapindex = ET.Element('sitemapindex')
         sitemapindex.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
@@ -205,12 +262,6 @@ def sitemap_index():
         sitemap = ET.SubElement(sitemapindex, 'sitemap')
         ET.SubElement(sitemap, 'loc').text = f'{base_url}/sitemap.xml'
         ET.SubElement(sitemap, 'lastmod').text = current_date
-
-        # Anime sitemap (eğer çok fazla anime varsa)
-        if recommendation_system and len(recommendation_system.id_to_anime) > 100:
-            sitemap = ET.SubElement(sitemapindex, 'sitemap')
-            ET.SubElement(sitemap, 'loc').text = f'{base_url}/sitemap-animes.xml'
-            ET.SubElement(sitemap, 'lastmod').text = current_date
 
         xml_str = ET.tostring(sitemapindex, encoding='unicode')
         xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -224,100 +275,18 @@ def sitemap_index():
             '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>',
             mimetype='application/xml')
 
-
-@app.route('/sitemap-animes.xml')
-def sitemap_animes():
-    """Anime'lere özel sitemap"""
-    try:
-        urlset = ET.Element('urlset')
-        urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
-        urlset.set('xmlns:image', 'http://www.google.com/schemas/sitemap-image/1.1')
-
-        base_url = request.url_root.rstrip('/')
-        current_date = datetime.now().strftime('%Y-%m-%d')
-
-        if recommendation_system and recommendation_system.id_to_anime:
-            for anime_id, anime_data in recommendation_system.id_to_anime.items():
-                try:
-                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
-                    safe_name = anime_name.replace(' ', '-').replace('/', '-').replace('?', '').replace('&', 'and')
-                    safe_name = re.sub(r'[^\w\-]', '', safe_name)
-
-                    url = ET.SubElement(urlset, 'url')
-                    ET.SubElement(url, 'loc').text = f'{base_url}/anime/{anime_id}/{safe_name}'
-                    ET.SubElement(url, 'lastmod').text = current_date
-                    ET.SubElement(url, 'changefreq').text = 'weekly'
-                    ET.SubElement(url, 'priority').text = '0.6'
-
-                    # Resim URL'si varsa ekle
-                    image_url = recommendation_system.get_anime_image_url(int(anime_id))
-                    if image_url:
-                        image_elem = ET.SubElement(url, 'image:image')
-                        ET.SubElement(image_elem, 'image:loc').text = image_url
-                        ET.SubElement(image_elem, 'image:title').text = anime_name
-                        ET.SubElement(image_elem, 'image:caption').text = f'Poster image for {anime_name}'
-
-                except Exception as e:
-                    print(f"Error processing anime {anime_id}: {e}")
-                    continue
-
-        xml_str = ET.tostring(urlset, encoding='unicode')
-        xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        full_xml = xml_declaration + xml_str
-
-        return Response(full_xml, mimetype='application/xml')
-
-    except Exception as e:
-        print(f"Anime sitemap generation error: {e}")
-        return Response(
-            '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
-            mimetype='application/xml')
-
-
-
-# SEO meta tag'leri için helper fonksiyon
-def get_meta_tags(page_type, anime_info=None):
-    """Sayfa türüne göre meta tag'leri döndürür"""
-    meta_tags = {
-        'home': {
-            'title': 'Anime Recommendation System - Discover Your Next Favorite Anime with BERT Transformer',
-            'description': 'Get personalized anime recommendations based on your favorite shows. Discover new anime series and movies with our AI-powered recommendation system.',
-            'keywords': 'anime, recommendation, anime list, manga, otaku, anime series, anime movies, ai, ai anime recommendation'
-        },
-        'chat': {
-            'title': 'Anime Chat Room - Connect with Fellow Otaku',
-            'description': 'Join our anime chat room and connect with other anime fans. Discuss your favorite shows, get recommendations, and make new friends.',
-            'keywords': 'anime chat, otaku community, anime discussion, anime fans'
-        }
-    }
-
-    if page_type == 'anime' and anime_info:
-        return {
-            'title': f"{anime_info['name']} - Anime Details & Recommendations",
-            'description': f"Learn about {anime_info['name']} and discover similar anime. Get personalized recommendations based on this anime.",
-            'keywords': f"{anime_info['name']}, anime, {', '.join(anime_info['genres'])}, recommendations"
-        }
-
-    return meta_tags.get(page_type, meta_tags['home'])
-
-
-# Chat route'u (mevcut route'lardan sonra ekle)
 @app.route('/chat')
 def chat():
     return render_template('chat.html')
 
-
-# SocketIO event'leri (dosyanın sonuna, main() fonksiyonundan önce ekle)
+# SocketIO event'leri
 @socketio.on('connect')
 def on_connect():
     username = generate_username()
-    active_users[request.sid] = {
-        'username': username,
-        'connected_at': datetime.now()
-    }
+    chat_manager.add_user(request.sid, username)
 
     # Kullanıcıya mevcut mesajları gönder
-    emit('chat_history', chat_messages)
+    emit('chat_history', chat_manager.get_messages())
 
     # Kullanıcı katıldı mesajı
     join_message = {
@@ -327,22 +296,15 @@ def on_connect():
         'type': 'system'
     }
 
-    chat_messages.append(join_message)
-    if len(chat_messages) > MAX_MESSAGES:
-        chat_messages.pop(0)
-
-    # Herkese gönder
+    chat_manager.add_message(join_message)
     emit('new_message', join_message, broadcast=True)
-    emit('user_count', len(active_users), broadcast=True)
-
+    emit('user_count', chat_manager.get_user_count(), broadcast=True)
 
 @socketio.on('disconnect')
 def on_disconnect():
-    if request.sid in active_users:
-        username = active_users[request.sid]['username']
-        del active_users[request.sid]
-
-        # Kullanıcı ayrıldı mesajı
+    user = chat_manager.remove_user(request.sid)
+    if user:
+        username = user['username']
         leave_message = {
             'username': 'System',
             'message': f'{username} left the chat',
@@ -350,26 +312,20 @@ def on_disconnect():
             'type': 'system'
         }
 
-        chat_messages.append(leave_message)
-        if len(chat_messages) > MAX_MESSAGES:
-            chat_messages.pop(0)
-
+        chat_manager.add_message(leave_message)
         emit('new_message', leave_message, broadcast=True)
-        emit('user_count', len(active_users), broadcast=True)
-
+        emit('user_count', chat_manager.get_user_count(), broadcast=True)
 
 @socketio.on('send_message')
 def handle_message(data):
-    if request.sid not in active_users:
+    username = chat_manager.get_username(request.sid)
+    if not username:
         return
 
-    username = active_users[request.sid]['username']
     message = clean_message(data.get('message', ''))
-
     if not message:
         return
 
-    # Mesaj objesi oluştur
     message_obj = {
         'username': username,
         'message': message,
@@ -377,30 +333,21 @@ def handle_message(data):
         'type': 'user'
     }
 
-    # Mesajı kaydet
-    chat_messages.append(message_obj)
-    if len(chat_messages) > MAX_MESSAGES:
-        chat_messages.pop(0)
-
-    # Herkese gönder
+    chat_manager.add_message(message_obj)
     emit('new_message', message_obj, broadcast=True)
-
 
 @socketio.on('change_username')
 def handle_username_change(data):
-    if request.sid not in active_users:
+    old_username = chat_manager.get_username(request.sid)
+    if not old_username:
         return
 
-    old_username = active_users[request.sid]['username']
     new_username = clean_message(data.get('username', ''))
-
     if not new_username or len(new_username) < 2:
         return
 
-    # Kullanıcı adını güncelle
-    active_users[request.sid]['username'] = new_username
+    chat_manager.update_username(request.sid, new_username)
 
-    # İsim değişikliği mesajı
     change_message = {
         'username': 'System',
         'message': f'{old_username} changed name to {new_username}',
@@ -408,81 +355,46 @@ def handle_username_change(data):
         'type': 'system'
     }
 
-    chat_messages.append(change_message)
-    if len(chat_messages) > MAX_MESSAGES:
-        chat_messages.pop(0)
-
+    chat_manager.add_message(change_message)
     emit('new_message', change_message, broadcast=True)
     emit('username_changed', {'username': new_username})
 
-
 class AnimeRecommendationSystem:
-    def __init__(self, checkpoint_path, dataset_path, animes_path, images_path, mal_urls_path, type_seq_path,
-                 genres_path):
+    def __init__(self, checkpoint_path, dataset_path, animes_path, images_path, mal_urls_path, type_seq_path, genres_path):
         self.model = None
         self.dataset = None
-        self.id_to_anime = {}
-        self.id_to_url = {}
-        self.id_to_mal_url = {}
-        self.genres_path = genres_path
-        self.id_to_genres = {}
-        self.type_seq_path = type_seq_path
-        self.id_to_type_seq = {}
         self.checkpoint_path = checkpoint_path
         self.dataset_path = dataset_path
         self.animes_path = animes_path
-        self.images_path = images_path
-        self.mal_urls_path = mal_urls_path
+        
+        # Lazy loading ile memory optimization
+        self.id_to_anime = LazyDict(animes_path)
+        self.id_to_url = LazyDict(images_path)
+        self.id_to_mal_url = LazyDict(mal_urls_path)
+        self.id_to_type_seq = LazyDict(type_seq_path)
+        self.id_to_genres = LazyDict(genres_path)
+        
+        # Cache için weak reference kullan
+        self._cache = weakref.WeakValueDictionary()
+        
         self.load_model_and_data()
 
     def load_model_and_data(self):
         try:
             print("Loading model and data...")
-
             args.bert_max_len = 128
 
+            # Dataset'i yükle
             dataset_path = Path(self.dataset_path)
             with dataset_path.open('rb') as f:
                 self.dataset = pickle.load(f)
 
-            with open(self.animes_path, "r", encoding="utf-8") as file:
-                self.id_to_anime = json.load(file)
-
-            try:
-                with open(self.images_path, "r", encoding="utf-8") as file:
-                    self.id_to_url = json.load(file)
-                print(f"Loaded {len(self.id_to_url)} image URLs")
-            except Exception as e:
-                print(f"Warning: Could not load image URLs: {str(e)}")
-                self.id_to_url = {}
-
-            try:
-                with open(self.mal_urls_path, "r", encoding="utf-8") as file:
-                    self.id_to_mal_url = json.load(file)
-                print(f"Loaded {len(self.id_to_mal_url)} MAL URLs")
-            except Exception as e:
-                print(f"Warning: Could not load MAL URLs: {str(e)}")
-                self.id_to_mal_url = {}
-
-            try:
-                with open(self.type_seq_path, "r", encoding="utf-8") as file:
-                    self.id_to_type_seq = json.load(file)
-                print(f"Loaded {len(self.id_to_type_seq)} type/sequel info")
-            except Exception as e:
-                print(f"Warning: Could not load type/sequel info: {str(e)}")
-                self.id_to_type_seq = {}
-
-            try:
-                with open(self.genres_path, "r", encoding="utf-8") as file:
-                    self.id_to_genres = json.load(file)
-                print(f"Loaded {len(self.id_to_genres)} genre info")
-            except Exception as e:
-                print(f"Warning: Could not load genres: {str(e)}")
-                self.id_to_genres = {}
-
+            # Model'i yükle
             self.model = model_factory(args)
             self.load_checkpoint()
 
+            # Garbage collection
+            gc.collect()
             print("Model loaded successfully!")
 
         except Exception as e:
@@ -495,6 +407,11 @@ class AnimeRecommendationSystem:
                 checkpoint = torch.load(f, map_location='cpu', weights_only=False)
             self.model.load_state_dict(checkpoint['model_state_dict'])
             self.model.eval()
+            
+            # Checkpoint'i bellekten temizle
+            del checkpoint
+            gc.collect()
+            
         except Exception as e:
             raise Exception(f"Failed to load checkpoint from {self.checkpoint_path}: {str(e)}")
 
@@ -503,12 +420,19 @@ class AnimeRecommendationSystem:
         return [genre.title() for genre in genres] if genres else []
 
     def get_all_animes(self):
-        """Tüm anime listesini döndürür"""
+        """Tüm anime listesini döndürür - cache kullanır"""
+        cache_key = 'all_animes'
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+        
         animes = []
-        for k, v in self.id_to_anime.items():
+        # Sadece gerekli durumlarda yükle
+        for k, v in list(self.id_to_anime.items())[:1000]:  # İlk 1000 anime
             anime_name = v[0] if isinstance(v, list) and len(v) > 0 else str(v)
             animes.append((int(k), anime_name))
+        
         animes.sort(key=lambda x: x[1])
+        self._cache[cache_key] = animes
         return animes
 
     def get_anime_image_url(self, anime_id):
@@ -522,10 +446,10 @@ class AnimeRecommendationSystem:
         if not filters:
             return None
 
-        # Eğer sadece hentai istiyorsa, hentai anime'leri filtrele
         if filters.get('show_hentai') and len([k for k, v in filters.items() if v]) == 1:
             hentai_animes = []
-            for anime_id_str, anime_data in self.id_to_anime.items():
+            # Sadece gerekli verileri kontrol et
+            for anime_id_str in list(self.id_to_anime.keys())[:500]:  # Limit
                 anime_id = int(anime_id_str)
                 if self._is_hentai(anime_id):
                     hentai_animes.append(anime_id)
@@ -541,13 +465,13 @@ class AnimeRecommendationSystem:
         return type_seq_info[2]
 
     def _get_type(self, anime_id):
-        """Anime'nin hentai olup olmadığını kontrol eder"""
+        """Anime tipini döndürür"""
         type_seq_info = self.id_to_type_seq.get(str(anime_id))
-        if not type_seq_info or len(type_seq_info) < 3:
-            return False
+        if not type_seq_info or len(type_seq_info) < 2:
+            return "Unknown"
         return type_seq_info[1]
 
-    def get_recommendations(self, favorite_anime_ids, num_recommendations=40, filters=None):
+    def get_recommendations(self, favorite_anime_ids, num_recommendations=20, filters=None):  # Reduced from 40
         try:
             if not favorite_anime_ids:
                 return [], [], "Please add some favorite animes first!"
@@ -566,15 +490,14 @@ class AnimeRecommendationSystem:
             # Hentai filtresi özel durumu
             filtered_pool = self.get_filtered_anime_pool(filters)
             if filtered_pool is not None:
-                return self._get_recommendations_from_pool(favorite_anime_ids, filtered_pool, num_recommendations,
-                                                           filters)
+                return self._get_recommendations_from_pool(favorite_anime_ids, filtered_pool, num_recommendations, filters)
 
             # Normal öneriler
             target_len = 128
             padded = converted_ids + [0] * (target_len - len(converted_ids))
             input_tensor = torch.tensor(padded, dtype=torch.long).unsqueeze(0)
 
-            max_predictions = min(125, len(inverted_smap))  # Daha fazla sonuç al
+            max_predictions = min(75, len(inverted_smap))  # Reduced from 125
 
             with torch.no_grad():
                 logits = self.model(input_tensor)
@@ -596,9 +519,10 @@ class AnimeRecommendationSystem:
                         if filters and not self._should_include_anime(anime_id, filters):
                             continue
 
-                        anime_data = self.id_to_anime[str(anime_id)]
-                        anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
-                            anime_data)
+                        anime_data = self.id_to_anime.get(str(anime_id))
+                        anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
+                        
+                        # Lazy loading ile image ve mal url al
                         image_url = self.get_anime_image_url(anime_id)
                         mal_url = self.get_anime_mal_url(anime_id)
 
@@ -615,6 +539,10 @@ class AnimeRecommendationSystem:
                         if len(recommendations) >= num_recommendations:
                             break
 
+            # Memory cleanup
+            del logits, last_logits, top_scores, top_indices
+            gc.collect()
+
             return recommendations, scores, f"Found {len(recommendations)} recommendations!"
 
         except Exception as e:
@@ -624,8 +552,6 @@ class AnimeRecommendationSystem:
         """Önceden filtrelenmiş anime havuzundan öneriler alır"""
         try:
             smap = self.dataset
-            inverted_smap = {v: k for k, v in smap.items()}
-
             converted_ids = []
             for anime_id in favorite_anime_ids:
                 if anime_id in smap:
@@ -660,23 +586,23 @@ class AnimeRecommendationSystem:
             recommendations = []
             for anime_id, score in anime_scores[:num_recommendations]:
                 if str(anime_id) in self.id_to_anime:
-                    anime_data = self.id_to_anime[str(anime_id)]
-                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(
-                        anime_data)
-                    image_url = self.get_anime_image_url(anime_id)
-                    mal_url = self.get_anime_mal_url(anime_id)
-
+                    anime_data = self.id_to_anime.get(str(anime_id))
+                    anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
+                    
                     recommendations.append({
                         'id': anime_id,
                         'name': anime_name,
                         'score': float(score),
-                        'image_url': image_url,
-                        'mal_url': mal_url,
+                        'image_url': self.get_anime_image_url(anime_id),
+                        'mal_url': self.get_anime_mal_url(anime_id),
                         'genres': self.get_anime_genres(anime_id)
                     })
 
-            return recommendations, [r['score'] for r in
-                                     recommendations], f"Found {len(recommendations)} filtered recommendations!"
+            # Memory cleanup
+            del logits, last_logits
+            gc.collect()
+
+            return recommendations, [r['score'] for r in recommendations], f"Found {len(recommendations)} filtered recommendations!"
 
         except Exception as e:
             return [], [], f"Error during filtered prediction: {str(e)}"
@@ -700,14 +626,12 @@ class AnimeRecommendationSystem:
             if not filters['show_sequels'] and is_sequel:
                 return False
 
-        # Hentai filtresi - özel durum
+        # Hentai filtresi
         if 'show_hentai' in filters:
             if filters['show_hentai']:
-                # Sadece hentai göster
                 if not is_hentai:
                     return False
             else:
-                # Hentai gösterme
                 if is_hentai:
                     return False
 
@@ -726,29 +650,30 @@ class AnimeRecommendationSystem:
 
         return True
 
-
 recommendation_system = None
-
 
 @app.route('/')
 def index():
     if recommendation_system is None:
-        return render_template('error.html',
-                               error="Recommendation system not initialized. Please check server logs.")
+        return render_template('error.html', error="Recommendation system not initialized. Please check server logs.")
 
     animes = recommendation_system.get_all_animes()
     return render_template('index.html', animes=animes)
-
 
 @app.route('/api/search_animes')
 def search_animes():
     query = request.args.get('q', '').lower()
     animes = []
-
+    
+    # Sadece ilk 200 anime'yi arama - performance için
+    count = 0
     for k, v in recommendation_system.id_to_anime.items():
+        if count >= 200:
+            break
+            
         anime_names = v if isinstance(v, list) else [v]
-
         match_found = False
+        
         for name in anime_names:
             if query in name.lower():
                 match_found = True
@@ -757,10 +682,10 @@ def search_animes():
         if not query or match_found:
             main_name = anime_names[0] if anime_names else "Unknown"
             animes.append((int(k), main_name))
+            count += 1
 
     animes.sort(key=lambda x: x[1])
     return jsonify(animes)
-
 
 @app.route('/api/add_favorite', methods=['POST'])
 def add_favorite():
@@ -769,15 +694,17 @@ def add_favorite():
 
     data = request.get_json()
     anime_id = int(data['anime_id'])
-    anime_name = data['anime_name']
 
     if anime_id not in session['favorites']:
+        # Maksimum 20 favori anime (memory için)
+        if len(session['favorites']) >= 20:
+            return jsonify({'success': False, 'message': 'Maximum 20 favorite animes allowed'})
+        
         session['favorites'].append(anime_id)
         session.modified = True
         return jsonify({'success': True})
     else:
         return jsonify({'success': False})
-
 
 @app.route('/api/remove_favorite', methods=['POST'])
 def remove_favorite():
@@ -787,7 +714,6 @@ def remove_favorite():
     data = request.get_json()
     anime_id = int(data['anime_id'])
 
-
     if anime_id in session['favorites']:
         session['favorites'].remove(anime_id)
         session.modified = True
@@ -795,13 +721,11 @@ def remove_favorite():
     else:
         return jsonify({'success': False})
 
-
 @app.route('/api/clear_favorites', methods=['POST'])
 def clear_favorites():
     session['favorites'] = []
     session.modified = True
     return jsonify({'success': True})
-
 
 @app.route('/api/get_favorites')
 def get_favorites():
@@ -811,12 +735,22 @@ def get_favorites():
     favorite_animes = []
     for anime_id in session['favorites']:
         if str(anime_id) in recommendation_system.id_to_anime:
-            anime_data = recommendation_system.id_to_anime[str(anime_id)]
-
+            anime_data = recommendation_system.id_to_anime.get(str(anime_id))
             anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
             favorite_animes.append({'id': anime_id, 'name': anime_name})
 
     return jsonify(favorite_animes)
+
+@app.route('/api/get_recommendations', methods=['POST'])
+def get_recommendations():
+    if 'favorites' not in session or not session['favorites']:
+        return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
+
+    data = request.get_json() or {}
+    filters = data.get('filters', {})
+
+    # Blacklist bilgisini ekle
+    blacklisted_animes = data.get('black
 
 
 @app.route('/api/get_recommendations', methods=['POST'])
