@@ -490,19 +490,13 @@ class AnimeRecommendationSystem:
             raise e
 
     def load_checkpoint(self):
-      try:
-        checkpoint = torch.load(self.checkpoint_path, map_location='cpu', weights_only=False)
-        # Model state dict'i kontrol et
-        if 'model_state_dict' in checkpoint:
+        try:
+            with open(self.checkpoint_path, 'rb') as f:
+                checkpoint = torch.load(f, map_location='cpu', weights_only=False)
             self.model.load_state_dict(checkpoint['model_state_dict'])
-        else:
-            # Checkpoint direkt model state dict'i içeriyorsa
-            self.model.load_state_dict(checkpoint)
-        self.model.eval()
-        print("Model checkpoint loaded successfully!")
-      except Exception as e:
-        print(f"Failed to load checkpoint from {self.checkpoint_path}: {str(e)}")
-        raise Exception(f"Failed to load checkpoint: {str(e)}")
+            self.model.eval()
+        except Exception as e:
+            raise Exception(f"Failed to load checkpoint from {self.checkpoint_path}: {str(e)}")
 
     def get_anime_genres(self, anime_id):
         genres = self.id_to_genres.get(str(anime_id), [])
@@ -739,15 +733,11 @@ recommendation_system = None
 @app.route('/')
 def index():
     if recommendation_system is None:
-        return render_template('error.html', 
-                             error="Recommendation system is loading... Please wait and refresh the page.")
-    
-    try:
-        animes = recommendation_system.get_all_animes()
-        return render_template('index.html', animes=animes)
-    except Exception as e:
-        return render_template('error.html', 
-                             error=f"Error loading animes: {str(e)}")
+        return render_template('error.html',
+                               error="Recommendation system not initialized. Please check server logs.")
+
+    animes = recommendation_system.get_all_animes()
+    return render_template('index.html', animes=animes)
 
 
 @app.route('/api/search_animes')
@@ -868,12 +858,12 @@ def get_mal_logo():
 
 def main():
     global recommendation_system
-    
+
     args.num_items = 12689
-    
+
     import gdown
     import os
-    
+
     file_ids = {
         "1C6mdjblhiWGhRgbIk5DP2XCc4ElS9x8p": "pretrained_bert.pth",
         "1U42cFrdLFT8NVNikT9C5SD9aAux7a5U2": "animes.json",
@@ -883,48 +873,50 @@ def main():
         "1_TyzON6ie2CqvzVNvPyc9prMTwLMefdu": "anime_to_typenseq.json",
         "1G9O_ahyuJ5aO0cwoVnIXrlzMqjKrf2aw": "id_to_genres.json"
     }
-    
+
     def download_from_gdrive(file_id, output_path):
         url = f"https://drive.google.com/uc?id={file_id}"
         try:
-            print(f"Downloading: {output_path}")
+            print(f"Downloading: {file_id}")
             gdown.download(url, output_path, quiet=False)
             print(f"Downloaded: {output_path}")
             return True
         except Exception as e:
-            print(f"Error downloading {output_path}: {e}")
+            print(f"Error: {e}")
             return False
-    
-    # Dosyaları kontrol et ve indir
-    for file_id, filename in file_ids.items():
-        if not os.path.exists(filename):
-            print(f"File {filename} not found, downloading...")
-            if not download_from_gdrive(file_id, filename):
-                print(f"Failed to download {filename}")
-                return  # Uygulama başlatma
-        else:
-            print(f"File {filename} already exists")
-    
+
+    for key, value in file_ids.items():
+        if os.path.isfile(value):
+            continue
+        download_from_gdrive(key, value)
+
     try:
-        print("Initializing recommendation system...")
+        images_path = "id_to_url.json"
+        mal_urls_path = "anime_to_malurl.json"
+        type_seq_path = "anime_to_typenseq.json"
+
+        if not os.path.exists(images_path):
+            print(f"Warning: {images_path} not found. Images will not be displayed.")
+
+        if not os.path.exists(mal_urls_path):
+            print(f"Warning: {mal_urls_path} not found. MAL links will not be available.")
+
         recommendation_system = AnimeRecommendationSystem(
             "pretrained_bert.pth",
-            "dataset.pkl", 
+            "dataset.pkl",
             "animes.json",
-            "id_to_url.json",
-            "anime_to_malurl.json",
-            "anime_to_typenseq.json",
+            images_path,
+            mal_urls_path,
+            type_seq_path,
             "id_to_genres.json"
         )
         print("Recommendation system initialized successfully!")
     except Exception as e:
         print(f"Failed to initialize recommendation system: {e}")
-        # Hata durumunda da uygulamayı başlat (sadece hata sayfası gösterir)
-        pass
-    
-    # Render.com için port ayarı
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False,allow_unsafe_werkzeug=True)
+        sys.exit(1)
+
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
 
 if __name__ == "__main__":
     main()
