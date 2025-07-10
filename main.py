@@ -741,17 +741,6 @@ def get_favorites():
 
     return jsonify(favorite_animes)
 
-@app.route('/api/get_recommendations', methods=['POST'])
-def get_recommendations():
-    if 'favorites' not in session or not session['favorites']:
-        return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
-
-    data = request.get_json() or {}
-    filters = data.get('filters', {})
-
-    # Blacklist bilgisini ekle
-    blacklisted_animes = data.get('black
-
 
 @app.route('/api/get_recommendations', methods=['POST'])
 def get_recommendations():
