@@ -574,7 +574,7 @@ class AnimeRecommendationSystem:
             padded = converted_ids + [0] * (target_len - len(converted_ids))
             input_tensor = torch.tensor(padded, dtype=torch.long).unsqueeze(0)
 
-            max_predictions = min(500, len(inverted_smap))  # Daha fazla sonuç al
+            max_predictions = min(125, len(inverted_smap))  # Daha fazla sonuç al
 
             with torch.no_grad():
                 logits = self.model(input_tensor)
