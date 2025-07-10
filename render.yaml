@@ -1,0 +1,8 @@
+# render.yaml dosyası ekleyin
+services:
+  - type: web
+    name: anime-recommendation
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn -w 1 --bind 0.0.0.0:$PORT app:app"
+    plan: free
