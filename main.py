@@ -317,9 +317,6 @@ class AnimeRecommendationSystem:
         try:
             print("Loading model and data...")
             
-            # Args ayarları
-            args.bert_max_len = 64  # 128 -> 64 (RAM tasarrufu)
-            
             # Dataset yükleme
             dataset_path = Path(self.dataset_path)
             with dataset_path.open('rb') as f:
