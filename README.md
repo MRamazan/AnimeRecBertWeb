@@ -1,5 +1,5 @@
 ## Web Demo 🌐
-www.animerecbert.online
+~~www.animerecbert.online~~
 
 ## Main Code
 https://github.com/MRamazan/AnimeRecBERT
