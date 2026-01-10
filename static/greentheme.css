@@ -2049,10 +2049,7 @@ body {
   }
 }
 
-*:not(pre, pre *, code, [aria-hidden="true"], [class*="fa-"], .fa, .fab, .fad, .fal, .far, .fas, .fass, .fasr, .fat, .icofont, [style*="font-"], [class*="icon"], [class*="Icon"], [class*="symbol"], [class*="Symbol"], .glyphicon, [class*="material-symbol"], [class*="material-icon"], mu, [class*="mu-"], .typcn, [class*="vjs-"]) {
-  -webkit-text-stroke: 0.2px !important;
-  text-stroke: 0.2px !important;
-}
+
 
 .jfk-bubble.gtx-bubble,
 .captcheck_answer_label > input + img,
