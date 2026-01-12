@@ -789,7 +789,7 @@ def main():
         )
         print("Recommendation system initialized successfully!")
     except Exception as e:
-        print(f"Failed to initialize recommendation system: {e}")
+        print(f"Failed to initialize recommendation system:  {e}")
         sys.exit(1)
 
     app.run(debug=False, host='0.0.0.0', port=5000)
