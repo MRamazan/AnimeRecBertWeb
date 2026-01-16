@@ -130,7 +130,7 @@ def sitemap():
         if recommendation_system and recommendation_system.id_to_anime:
             anime_count = 0
             for anime_id, anime_data in recommendation_system.id_to_anime.items():
-                if anime_count >= 500:  
+                if anime_count >= 50:  
                     break
                 try:
                     anime_name = anime_data[0] if isinstance(anime_data, list) and len(anime_data) > 0 else str(anime_data)
@@ -143,7 +143,7 @@ def sitemap():
                     ET.SubElement(url, 'changefreq').text = 'weekly'
                     ET.SubElement(url, 'priority').text = '0.6'
 
-                    if anime_count < 500: 
+                    if anime_count < 20: 
                         image_url = recommendation_system.get_anime_image_url(int(anime_id))
                         if image_url:
                             image_elem = ET.SubElement(url, 'image:image')
