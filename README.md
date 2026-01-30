@@ -29,6 +29,6 @@ python main.py
 ## Preview
 <img src="main_page.png" alt="Main" width="700">
 <img src="recommendations1.png" alt="Recommendations" width="700">
-<img src="recommendations1.png" alt="Recommendations" width="700">
-<img src="recommendations1.png" alt="Recommendations" width="700">
+<img src="recommendations2.png" alt="Recommendations" width="700">
+<img src="recommendations3.png" alt="Recommendations" width="700">
 
