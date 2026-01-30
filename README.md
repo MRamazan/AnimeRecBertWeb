@@ -16,7 +16,7 @@ python main.py
 ```
 
 ## For Windows
-If you want to run locally, **main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
+If you want to run locally, **main.py automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
 ```bash
 git clone https://github.com/MRamazan/AnimeRecBertWeb
 cd AnimeRecBertWeb
