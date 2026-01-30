@@ -356,7 +356,7 @@
         }
 
         .favorite-tag {
-            background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #1a8f7a 0%, #4fbf8a 100%);
 
             color: white;
             padding: 4px 12px;
@@ -408,11 +408,11 @@
         }
 
         .btn-primary {
-            background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);;
+    background: linear-gradient(135deg, #1a8f7a 0%, #4fbf8a 100%);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
 
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
 
         .btn-primary:hover {
             transform: translateY(-2px);
