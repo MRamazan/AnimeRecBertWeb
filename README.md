@@ -27,6 +27,8 @@ python main.py
 ```
 
 ## Preview
-<img src="favorites-selection.jpg" alt="Recommendations" width="700">
-<img src="recommendations.jpg" alt="Favorite Selection" width="700">
+<img src="main_page.png" alt="Main" width="700">
+<img src="recommendations1.png" alt="Recommendations" width="700">
+<img src="recommendations1.png" alt="Recommendations" width="700">
+<img src="recommendations1.png" alt="Recommendations" width="700">
 
