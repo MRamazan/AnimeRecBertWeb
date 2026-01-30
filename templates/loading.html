@@ -105,7 +105,7 @@
 
     <script>
         let checkCount = 0;
-        let maxChecks = 120; // 2 dakika (120 * 1000ms)
+        let maxChecks = 120; 
         
         function checkSystemStatus() {
             fetch('/api/system_status')
@@ -161,7 +161,7 @@
                 });
         }
         
-        // Sayfa yüklendiğinde kontrol başlat
+     
         checkSystemStatus();
     </script>
 </body>
