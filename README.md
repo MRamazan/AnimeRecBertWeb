@@ -1,5 +1,5 @@
 ## Web Demo 🌐
-www.animerecbert.online (may be down due to free resource limit)<br>
+Web Demo: www.animerecbert.online (may be down due to free resource limit)<br>
 Huggingface Space: https://huggingface.co/spaces/mramazan/AnimeRecBERT<br>
 
 ## Main Code
