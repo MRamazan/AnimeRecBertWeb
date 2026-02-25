@@ -1,9 +1,10 @@
 ## Web Demo 🌐
-www.animerecbert.online
+www.animerecbert.online (may be down due to free resource limit)<br>
+Huggingface Space: https://huggingface.co/spaces/mramazan/AnimeRecBERT<br>
 
 ## Main Code
-https://github.com/MRamazan/AnimeRecBERT (may be down due to free resource limit)<br>
-Huggingface Space: https://huggingface.co/spaces/mramazan/AnimeRecBERT<br>
+https://github.com/MRamazan/AnimeRecBERT 
+
 
 ## For Linux, Macos
 If you want to run locally, **main.py script automatically downloads 7 files from my google drive. pretrained model, dataset mappings, anime information files etc.**
