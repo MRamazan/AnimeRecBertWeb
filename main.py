@@ -16,7 +16,8 @@ import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins=["https://www.animerecbert.online"])
+API_KEY = os.environ.get("API_KEY")
 
 class ChatManager:
     def __init__(self, max_messages=100):  
@@ -702,6 +703,9 @@ def get_favorites():
 @app.route('/api/get_recommendations', methods=['POST'])
 @limiter.limit("1 per hour")
 def get_recommendations():
+    if request.headers.get("X-API-KEY") != API_KEY:
+        return jsonify({"error": "Unauthorized"}), 403
+        
     if 'favorites' not in session or not session['favorites']:
         return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
 
