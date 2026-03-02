@@ -13,11 +13,16 @@ from datetime import datetime
 import random
 import re
 import xml.etree.ElementTree as ET
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import secrets
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
 socketio = SocketIO(app, cors_allowed_origins=["https://www.animerecbert.online"])
-API_KEY = os.environ.get("API_KEY")
+
+
+
 
 class ChatManager:
     def __init__(self, max_messages=100):  
@@ -616,11 +621,12 @@ recommendation_system = None
 
 @app.route('/')
 def index():
+    session["csrf_token"] = secrets.token_hex(16)
     if recommendation_system is None:
         return render_template('error.html', error="Recommendation system not initialized. Please check server logs.")
 
     animes = recommendation_system.get_all_animes()
-    return render_template('index.html', animes=animes)
+    return render_template('index.html', animes=animes, csrf_token=session["csrf_token"])
 
 @app.route('/api/search_animes')
 def search_animes():
@@ -701,11 +707,10 @@ def get_favorites():
 
 
 @app.route('/api/get_recommendations', methods=['POST'])
-@limiter.limit("1 per hour")
-def get_recommendations():
-    if request.headers.get("X-API-KEY") != API_KEY:
-        return jsonify({"error": "Unauthorized"}), 403
-        
+def get_recommendations():  
+    if request.headers.get("X-CSRF-Token") != session.get("csrf_token"):
+        return jsonify({"error": "Bot detected"}), 403
+    
     if 'favorites' not in session or not session['favorites']:
         return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
 
