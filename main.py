@@ -620,12 +620,11 @@ recommendation_system = None
 
 @app.route('/')
 def index():
-    session["csrf_token"] = secrets.token_hex(16)
     if recommendation_system is None:
         return render_template('error.html', error="Recommendation system not initialized. Please check server logs.")
 
     animes = recommendation_system.get_all_animes()
-    return render_template('index.html', animes=animes, csrf_token=session["csrf_token"])
+    return render_template('index.html', animes=animes)
 
 @app.route('/api/search_animes')
 def search_animes():
