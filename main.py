@@ -439,7 +439,7 @@ class AnimeRecommendationSystem:
         if not type_seq_info or len(type_seq_info) < 2:
             return "Unknown"
         return type_seq_info[1]
-
+    
     def get_recommendations(self, favorite_anime_ids, num_recommendations=20, filters=None): 
         try:
             if not favorite_anime_ids:
@@ -698,7 +698,9 @@ def get_favorites():
     return jsonify(favorite_animes)
 
 
+
 @app.route('/api/get_recommendations', methods=['POST'])
+@limiter.limit("1 per hour")
 def get_recommendations():
     if 'favorites' not in session or not session['favorites']:
         return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
