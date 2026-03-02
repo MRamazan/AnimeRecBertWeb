@@ -18,7 +18,7 @@ from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
-socketio = SocketIO(app, cors_allowed_origins=["https://www.animerecbert.online"])
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 
