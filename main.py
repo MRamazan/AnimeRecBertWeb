@@ -15,7 +15,6 @@ import re
 import xml.etree.ElementTree as ET
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import secrets
 
 app = Flask(__name__)
 app.secret_key = '1903bjk'
@@ -708,8 +707,6 @@ def get_favorites():
 
 @app.route('/api/get_recommendations', methods=['POST'])
 def get_recommendations():  
-    if request.headers.get("X-CSRF-Token") != session.get("csrf_token"):
-        return jsonify({"error": "Bot detected"}), 403
     
     if 'favorites' not in session or not session['favorites']:
         return jsonify({'success': False, 'message': 'Please add some favorite animes first!'})
